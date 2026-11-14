@@ -1,7 +1,7 @@
 {
  "format": "family-tree/1",
  "title": "Our Family Tree",
- "updated": "2026-11-14T13:37:31.210Z",
+ "updated": "2026-11-14T13:58:47.251Z",
  "home": "plifohlwv",
  "custodians": [],
  "imported": [
@@ -21,7 +21,8 @@
    "status": "living",
    "notes": "Place of birth: Delhi",
    "parents": [
-    "pjkc67wxr"
+    "pjkc67wxr",
+    "pp3ugvhpb"
    ],
    "partners": [],
    "ex": [],
