@@ -140,7 +140,9 @@ const W=164,H=60,GX=18,GY=58,PG=26,PAD=50;
 const FIELDS=['given','middleName','commonName','surname','birthSurname','sex','born','died','notes'];
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const REL_TYPES=[['child','is a child of'],['parent','is a parent of'],['partner','is the spouse / partner of'],['expartner','is a former spouse / partner of'],['sibling','is a brother / sister of']];
-const DRAFT_KEY='ft-draft:'+location.pathname;
+/* storage keys ignore index.html / trailing-slash differences, so …/family-tree/ and …/family-tree/index.html share the same saved token and drafts */
+const PAGE_PATH=(()=>{let p=location.pathname.replace(/[^/]*\.html?$/i,'');if(!p.endsWith('/'))p+='/';return p;})();
+const DRAFT_KEY='ft-draft:'+PAGE_PATH;
 let DATA=null,KIDS={},custodian=false,dirty=false,loadedStamp=null;
 const S={focus:null,up:new Set(),down:new Set(),zoom:1};
 
@@ -385,7 +387,7 @@ function privSection(id){
 
 /* ---------- publish straight to GitHub (Contents API), with a 3-way merge so custodians never overwrite each other ---------- */
 let BASE=null; // the tree exactly as last loaded/published; edits are measured against it
-const TOKEN_KEY='ft-gh-token:'+location.host+location.pathname;
+const TOKEN_KEY='ft-gh-token:'+location.host+PAGE_PATH;
 const clone=x=>JSON.parse(JSON.stringify(x));
 function canon(x){if(Array.isArray(x))return'['+x.map(canon).join(',')+']';if(x&&typeof x==='object')return'{'+Object.keys(x).filter(k=>x[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+canon(x[k])).join(',')+'}';return JSON.stringify(x);}
 function ghConf(){
@@ -394,7 +396,10 @@ function ghConf(){
   if(!owner&&m){owner=m[1];repo=repo||location.pathname.split('/').filter(Boolean)[0]||(m[1]+'.github.io');}
   return owner&&repo?{owner,repo,branch:g.branch||'main',path:g.path||'family.json'}:null;
 }
-const getTok=()=>{try{return localStorage.getItem(TOKEN_KEY)||'';}catch(e){return'';}};
+const getTok=()=>{try{let t=localStorage.getItem(TOKEN_KEY);if(t)return t;
+  // pick up a token saved by an older version under a slightly different page address
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('ft-gh-token:'+location.host)&&localStorage.getItem(k)){t=localStorage.getItem(k);localStorage.setItem(TOKEN_KEY,t);return t;}}
+  return'';}catch(e){return'';}};
 const setTok=t=>{try{t?localStorage.setItem(TOKEN_KEY,t):localStorage.removeItem(TOKEN_KEY);}catch(e){}};
 function utf8b64(str){const b=TE.encode(str);let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s);}
 function b64utf8(t){return TD.decode(b64u8(t.replace(/\s/g,'')));}
@@ -448,22 +453,33 @@ function merge3(base,ours,theirs){
 }
 function askToken(){
   return new Promise(res=>{
-    const c=ghConf();
-    const inp=h('input',{type:'password',autocomplete:'off',placeholder:'github_pat_…'});
+    const c=ghConf(),fid='tokform'+Date.now();
+    // a real login form, so the browser / password manager offers to save the token and fills it in next time
+    const user=h('input',{type:'text',name:'username',autocomplete:'username',value:`${c.owner}/${c.repo} publishing`,readonly:true,style:'color:var(--muted)'});
+    const inp=h('input',{type:'password',name:'password',autocomplete:'current-password',placeholder:'github_pat_…'});
     const err=h('div',{class:'err',hidden:true});
-    const m=modal('Connect this device to GitHub',{wide:true,onclose:()=>res(!!getTok())});
-    m.set([h('p',{text:`Publishing saves your changes straight into ${c.owner}/${c.repo} on GitHub. Each custodian does this once per device.`}),
-      h('ol',{style:'padding-left:20px;margin:0 0 12px'},
-        h('li',{},'Sign in to GitHub, then open ',h('a',{href:'https://github.com/settings/personal-access-tokens/new',target:'_blank',rel:'noopener',text:'Settings → Fine-grained tokens → Generate new token'}),'.'),
-        h('li',{text:`Repository access: "Only select repositories" → ${c.repo}.`}),
-        h('li',{text:'Permissions → Repository permissions → Contents: "Read and write". Nothing else is needed.'}),
-        h('li',{text:'Generate it, copy the token, and paste it below.'})),
-      h('label',{class:'field'},h('span',{class:'lbl',text:'Access token'}),inp,h('span',{class:'hint',text:'Stored only in this browser on this device. Anyone using this browser could publish, so use "Forget token" in Settings on shared computers.'})),err],
-      [btn('Cancel',()=>m.close()),btn('Connect',async()=>{
-        const t=inp.value.trim();if(!t)return;setTok(t);err.hidden=true;
-        try{const r=await gh('GET',`/repos/${c.owner}/${c.repo}`);if(!r.ok)throw new Error(ghError(r));m.close();toast('Connected to GitHub.');}
-        catch(e){setTok('');err.textContent=e.message;err.hidden=false;}
-      },'primary')]);
+    const m=modal('Connect this browser to GitHub',{wide:true,onclose:()=>res(!!getTok())});
+    const form=h('form',{id:fid,method:'post',action:'#',onsubmit:async e=>{
+      e.preventDefault();
+      const t=inp.value.trim();if(!t){inp.focus();return;}
+      setTok(t);err.hidden=true;
+      try{const r=await gh('GET',`/repos/${c.owner}/${c.repo}`);if(!r.ok)throw new Error(ghError(r));m.close();toast('Connected to GitHub.');}
+      catch(x){setTok('');err.textContent=x.message;err.hidden=false;}
+    }},
+      h('label',{class:'field'},h('span',{class:'lbl',text:'Saved as'}),user),
+      h('label',{class:'field'},h('span',{class:'lbl',text:'Access token'}),inp,
+        h('span',{class:'hint',text:'When your browser or password manager offers to save this, say yes. Next time, in any browser that shares those saved passwords, it fills in by itself. Anyone using this browser could publish, so use "Forget token" in Settings on shared computers.'})),err);
+    m.set([h('p',{text:`Publishing saves your changes straight into ${c.owner}/${c.repo} on GitHub.`}),
+      h('div',{class:'warn',style:'margin:0 0 12px'},h('b',{text:'Already have a token? '}),'Paste the same one: a token works in every browser and on every device until you revoke it. It\'s asked for again only where this browser hasn\'t saved it (another browser, a private window, cleared browsing data). Lost it? Open it on GitHub and use "Regenerate token".'),
+      h('details',{},h('summary',{style:'cursor:pointer;margin-bottom:8px',text:'First time? How to create a token'}),
+        h('ol',{style:'padding-left:20px;margin:0 0 12px'},
+          h('li',{},'Sign in to GitHub, then open ',h('a',{href:'https://github.com/settings/personal-access-tokens/new',target:'_blank',rel:'noopener',text:'Settings → Fine-grained tokens → Generate new token'}),'.'),
+          h('li',{text:`Repository access: "Only select repositories" → ${c.repo}.`}),
+          h('li',{text:'Permissions → Repository permissions → Contents: "Read and write". Nothing else is needed.'}),
+          h('li',{text:'Generate it, copy the token, and paste it below. Also keep a copy in your password manager; GitHub shows it only once.'}))),
+      form],
+      [btn('Cancel',()=>m.close()),h('button',{type:'submit',form:fid,class:'btn primary',text:'Connect'})]);
+    if(!getTok())setTimeout(()=>inp.focus(),50);
   });
 }
 async function publish(){
