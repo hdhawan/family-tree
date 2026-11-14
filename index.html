@@ -363,6 +363,125 @@ function privSection(id){
   box.append(dl);return box;
 }
 
+/* ---------- publish straight to GitHub (Contents API), with a 3-way merge so custodians never overwrite each other ---------- */
+let BASE=null; // the tree exactly as last loaded/published; edits are measured against it
+const TOKEN_KEY='ft-gh-token:'+location.host+location.pathname;
+const clone=x=>JSON.parse(JSON.stringify(x));
+function canon(x){if(Array.isArray(x))return'['+x.map(canon).join(',')+']';if(x&&typeof x==='object')return'{'+Object.keys(x).filter(k=>x[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+canon(x[k])).join(',')+'}';return JSON.stringify(x);}
+function ghConf(){
+  const g=DATA&&DATA.github||{};let owner=g.owner,repo=g.repo;
+  const m=/^([^.]+)\.github\.io$/i.exec(location.hostname);
+  if(!owner&&m){owner=m[1];repo=repo||location.pathname.split('/').filter(Boolean)[0]||(m[1]+'.github.io');}
+  return owner&&repo?{owner,repo,branch:g.branch||'main',path:g.path||'family.json'}:null;
+}
+const getTok=()=>{try{return localStorage.getItem(TOKEN_KEY)||'';}catch(e){return'';}};
+const setTok=t=>{try{t?localStorage.setItem(TOKEN_KEY,t):localStorage.removeItem(TOKEN_KEY);}catch(e){}};
+function utf8b64(str){const b=TE.encode(str);let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s);}
+function b64utf8(t){return TD.decode(b64u8(t.replace(/\s/g,'')));}
+async function gh(method,url,body,accept){
+  return fetch('https://api.github.com'+url,{method,cache:'no-store',headers:Object.assign({Authorization:'Bearer '+getTok(),Accept:accept||'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},body?{'Content-Type':'application/json'}:{}),body:body?JSON.stringify(body):undefined});
+}
+function ghError(r){
+  if(r.status===401)return'GitHub rejected the access token (expired or mistyped). Enter it again.';
+  if(r.status===403||r.status===404)return"This token can't write to the repository. Check it has Contents: Read and write on this repository, and that you're a collaborator.";
+  return'GitHub returned an error ('+r.status+'). Try again in a minute.';
+}
+async function ghFetchLatest(){
+  const c=ghConf(),u=`/repos/${c.owner}/${c.repo}/contents/${c.path}?ref=${encodeURIComponent(c.branch)}`;
+  const r=await gh('GET',u);
+  if(r.status===404&&getTok())return{sha:null,data:emptyData()};
+  if(!r.ok)throw new Error(ghError(r));
+  const j=await r.json();let text;
+  if(j.content&&j.encoding==='base64')text=b64utf8(j.content);
+  else{const r2=await gh('GET',u,null,'application/vnd.github.raw+json');if(!r2.ok)throw new Error(ghError(r2));text=await r2.text();}
+  return{sha:j.sha,data:normalize(JSON.parse(text))};
+}
+function merge3(base,ours,theirs){
+  const out=clone(theirs),notes=[];const same=(a,b)=>canon(a)===canon(b);
+  const nm=p=>p?fullName(p):'someone';
+  for(const k of ['title','home','custodians','vault','github']){
+    if(same(ours[k],base[k]))continue;
+    if(same(theirs[k],base[k])||same(theirs[k],ours[k]))out[k]=clone(ours[k]);
+    else notes.push(`Setting "${k}": another custodian also changed it, so their version was kept.`);
+  }
+  out.imported=[...new Set([...(theirs.imported||[]),...(ours.imported||[])])].slice(-2000);
+  const ids=new Set([...Object.keys(base.people),...Object.keys(ours.people),...Object.keys(theirs.people)]);
+  for(const id of ids){
+    const b=base.people[id],o=ours.people[id],t=theirs.people[id];
+    if(same(o,b))continue;                       // untouched by us: their version stands
+    if(!b){out.people[id]=clone(o);continue;}     // added by us
+    if(!o){                                      // deleted by us
+      if(t&&same(t,b))delete out.people[id];
+      else if(t)notes.push(`${nm(t)}: you deleted them, but another custodian edited them meanwhile, so they were kept.`);
+      continue;
+    }
+    if(!t){notes.push(`${nm(o)}: another custodian deleted them while you were editing. Re-add them if that was a mistake.`);continue;}
+    const r=clone(t);
+    for(const k of new Set([...Object.keys(b),...Object.keys(o),...Object.keys(t)])){
+      if(same(o[k],b[k]))continue;
+      if(same(t[k],b[k])||same(t[k],o[k])){if(o[k]===undefined)delete r[k];else r[k]=clone(o[k]);}
+      else notes.push(`${nm(o)}: "${k}" was also changed by another custodian, so their version was kept.`);
+    }
+    out.people[id]=r;
+  }
+  return{out:normalize(out),notes};
+}
+function askToken(){
+  return new Promise(res=>{
+    const c=ghConf();
+    const inp=h('input',{type:'password',autocomplete:'off',placeholder:'github_pat_…'});
+    const err=h('div',{class:'err',hidden:true});
+    const m=modal('Connect this device to GitHub',{wide:true,onclose:()=>res(!!getTok())});
+    m.set([h('p',{text:`Publishing saves your changes straight into ${c.owner}/${c.repo} on GitHub. Each custodian does this once per device.`}),
+      h('ol',{style:'padding-left:20px;margin:0 0 12px'},
+        h('li',{},'Sign in to GitHub, then open ',h('a',{href:'https://github.com/settings/personal-access-tokens/new',target:'_blank',rel:'noopener',text:'Settings → Fine-grained tokens → Generate new token'}),'.'),
+        h('li',{text:`Repository access: "Only select repositories" → ${c.repo}.`}),
+        h('li',{text:'Permissions → Repository permissions → Contents: "Read and write". Nothing else is needed.'}),
+        h('li',{text:'Generate it, copy the token, and paste it below.'})),
+      h('label',{class:'field'},h('span',{class:'lbl',text:'Access token'}),inp,h('span',{class:'hint',text:'Stored only in this browser on this device. Anyone using this browser could publish, so use "Forget token" in Settings on shared computers.'})),err],
+      [btn('Cancel',()=>m.close()),btn('Connect',async()=>{
+        const t=inp.value.trim();if(!t)return;setTok(t);err.hidden=true;
+        try{const r=await gh('GET',`/repos/${c.owner}/${c.repo}`);if(!r.ok)throw new Error(ghError(r));m.close();toast('Connected to GitHub.');}
+        catch(e){setTok('');err.textContent=e.message;err.hidden=false;}
+      },'primary')]);
+  });
+}
+async function publish(){
+  if(!ghConf())return saveJson();
+  if(!getTok()&&!await askToken())return;
+  const by=(()=>{try{return localStorage.getItem('ft-by')||'';}catch(e){return'';}})();
+  const pb=$('#publish-btn');if(pb){pb.disabled=true;pb.textContent='Publishing…';}
+  try{
+    for(let attempt=0;attempt<4;attempt++){
+      const latest=await ghFetchLatest();
+      let next=DATA,notes=[];
+      if(latest.sha&&(!BASE)||latest.sha&&BASE&&(canon(latest.data.people)!==canon(BASE.people)||canon(Object.assign({},latest.data,{people:0,updated:0}))!==canon(Object.assign({},BASE,{people:0,updated:0})))){
+        ({out:next,notes}=merge3(BASE||emptyData(),DATA,latest.data));
+      }
+      next.updated=new Date().toISOString();
+      const c=ghConf();
+      const r=await gh('PUT',`/repos/${c.owner}/${c.repo}/contents/${c.path}`,{message:`Family tree update${by?' by '+by:''}`,content:utf8b64(JSON.stringify(next,null,1)),branch:c.branch,...(latest.sha?{sha:latest.sha}:{})});
+      if(r.status===409||r.status===422)continue; // someone published between our read and write: re-read and merge again
+      if(r.status===401){setTok('');throw new Error(ghError(r));}
+      if(!r.ok)throw new Error(ghError(r));
+      DATA=next;BASE=clone(next);rebuildIndex();dirty=false;loadedStamp=DATA.updated;
+      try{localStorage.removeItem(DRAFT_KEY);}catch(e){}
+      updateStatus();setFocus(P(S.focus)?S.focus:pickHome());
+      if(notes.length){const m=modal('Published, with notes',{wide:true});m.set([h('p',{text:'Another custodian published changes while you were working. Both sets of changes were combined, except:'}),h('div',{class:'warn'},notes.map(n=>h('div',{text:n})))],[btn('OK',()=>m.close(),'primary')]);}
+      else toast('Published. Everyone sees it within a few minutes.',5000);
+      return;
+    }
+    throw new Error('The tree kept changing on GitHub while publishing. Try again.');
+  }catch(e){const m=modal("Couldn't publish");m.set(h('p',{text:e.message+' Your changes are still saved on this device.'}),[btn('OK',()=>m.close(),'primary')]);}
+  finally{const pb=$('#publish-btn');if(pb){pb.disabled=false;pb.textContent='Publish';}}
+}
+async function refreshFromGitHub(){
+  if(!ghConf()||!getTok()||dirty)return;
+  try{const latest=await ghFetchLatest();
+    if(!dirty&&canon(latest.data)!==canon(BASE)){DATA=latest.data;BASE=clone(DATA);rebuildIndex();loadedStamp=DATA.updated;setFocus(P(S.focus)?S.focus:pickHome());toast('Loaded the latest version from GitHub.');}
+  }catch(e){}
+}
+
 /* ---------- encoding for submission codes ---------- */
 function b64e(str){const b=new TextEncoder().encode(str);let s='';for(const x of b)s+=String.fromCharCode(x);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
 function b64d(t){t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';const s=atob(t);const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return new TextDecoder().decode(b);}
@@ -403,7 +522,8 @@ function shell(){
       h('div',{class:'top-actions'},btn('+ Add someone',()=>openAddFlow(S.focus),'primary'),h('button',{type:'button',class:'btn',id:'cust-btn',text:'Custodian',onclick:toggleCustodian}))),
     h('div',{class:'cust-bar',id:'cust-bar',hidden:true},
       btn('Add person',()=>openEditPerson(null)),btn('Import submissions',openImport),btn('Settings',openSettings),
-      btn('Save family.json',saveJson,'primary'),btn('Export GEDCOM',exportGedcom),btn('Offline copy',saveOffline),
+      ghConf()?h('button',{type:'button',class:'btn primary',id:'publish-btn',text:'Publish',onclick:publish}):null,
+      btn(ghConf()?'Download backup':'Save family.json',saveJson,ghConf()?'':'primary'),btn('Export GEDCOM',exportGedcom),btn('Offline copy',saveOffline),
       h('span',{class:'status',id:'status'})),
     h('div',{class:'banner',id:'banner',hidden:true}),
     h('div',{class:'body'},
@@ -761,21 +881,21 @@ function targetName(t,sub){if(/^n\d+$/.test(t)){const p=sub.people.find(x=>x.tmp
 function toggleCustodian(){
   custodian=!custodian;$('#cust-bar').hidden=!custodian;
   const b=$('#cust-btn');b.classList.toggle('on',custodian);b.textContent=custodian?'Exit custodian':'Custodian';
-  if(custodian)toast('Custodian mode: edits stay on this device until you save family.json and put it on the website.',5000);
+  if(custodian){if(ghConf()){if(getTok())refreshFromGitHub();toast('Custodian mode: tap Publish when you are done to save your changes to GitHub.',5000);}else toast('Custodian mode: edits stay on this device until you save family.json and put it on the website.',5000);}
   renderTree();renderSide();
 }
 function markDirty(){
   dirty=true;updateStatus();
-  try{localStorage.setItem(DRAFT_KEY,JSON.stringify({at:Date.now(),base:loadedStamp,data:DATA}));}catch(e){}
+  try{localStorage.setItem(DRAFT_KEY,JSON.stringify({at:Date.now(),base:loadedStamp,baseData:BASE,data:DATA}));}catch(e){}
 }
-function updateStatus(){const s=$('#status');if(!s)return;s.textContent=dirty?'Unsaved changes — save family.json and publish it':'No unsaved changes';s.classList.toggle('dirty',dirty);}
+function updateStatus(){const s=$('#status');if(!s)return;s.textContent=dirty?(ghConf()?'Unpublished changes — tap Publish':'Unsaved changes — save family.json and publish it'):'No unpublished changes';s.classList.toggle('dirty',dirty);}
 function checkDraft(){
   let d=null;try{d=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');}catch(e){}
   if(!d||!d.data)return;
   const b=$('#banner');b.innerHTML='';b.hidden=false;
   const older=d.base!==loadedStamp;
   b.append(h('span',{text:`Unsaved custodian changes from ${new Date(d.at).toLocaleString()} were found on this device.${older?' The published tree has changed since then, so restoring will replace it.':''}`}),
-    btn('Restore them',()=>{DATA=normalize(d.data);rebuildIndex();dirty=true;b.hidden=true;if(!custodian)toggleCustodian();updateStatus();setFocus(P(S.focus)?S.focus:pickHome());}),
+    btn('Restore them',()=>{DATA=normalize(d.data);if(d.baseData)BASE=normalize(d.baseData);rebuildIndex();dirty=true;b.hidden=true;if(!custodian)toggleCustodian();updateStatus();setFocus(P(S.focus)?S.focus:pickHome());}),
     btn('Discard',()=>{try{localStorage.removeItem(DRAFT_KEY);}catch(e){}b.hidden=true;}));
 }
 function afterChange(focusId){
@@ -916,7 +1036,8 @@ function openSettings(){
   const m=modal('Settings',{wide:true});
   m.set([h('label',{class:'field'},h('span',{class:'lbl',text:'Tree title'}),t),
     h('label',{class:'field'},h('span',{class:'lbl',text:'Custodians'}),c,h('span',{class:'hint',text:'Shown to relatives so they know who to send their additions to.'})),
-    h('div',{class:'field'},h('span',{class:'lbl',text:'Person the tree opens on'}),home.el),passField],
+    h('div',{class:'field'},h('span',{class:'lbl',text:'Person the tree opens on'}),home.el),passField,
+    ghConf()?h('div',{class:'field'},h('span',{class:'lbl',text:'GitHub publishing'}),h('div',{class:'hint',style:'margin-bottom:6px',text:`Repository ${ghConf().owner}/${ghConf().repo} · ${getTok()?'this device is connected':'this device is not connected yet'}`}),getTok()?btn('Forget token on this device',()=>{setTok('');toast('Token removed from this device.');m.close();}):btn('Connect this device',()=>{m.close();askToken();})):null],
     [btn('Cancel',m.close),btn('Save',async()=>{
       const pw=np.value;
       if(pw&&(!DATA.vault||KEY)){if(pw.length<8){toast('The passphrase needs at least 8 characters.');return;}if(!cryptoOK()){toast('Encryption needs the page served over https.');return;}await createVault(pw);renderSide();}
@@ -940,6 +1061,7 @@ function showCopy(filename,text){
 async function saveJson(){
   DATA.updated=new Date().toISOString();
   const ok=await saveFile('family.json',JSON.stringify(DATA,null,1),'application/json');
+  if(ok&&ghConf()){toast('Backup downloaded. Use Publish to update the website.',5000);return;}
   if(ok){dirty=false;loadedStamp=DATA.updated;updateStatus();try{localStorage.removeItem(DRAFT_KEY);}catch(e){}toast('Saved. Replace family.json on the website to publish it.',5000);}
 }
 function gdate(v){const ap=v[0]==='~';const [y,m,d]=(ap?v.slice(1):v).split('-');return(ap?'ABT ':'')+(d?`${+d} ${MON[+m-1].toUpperCase()} ${y}`:m?`${MON[+m-1].toUpperCase()} ${y}`:y);}
@@ -989,7 +1111,7 @@ function startScreen(msg){
 }
 function init(data){
   if(window.innerWidth<500)S.zoom=.85;
-  DATA=normalize(data);loadedStamp=DATA.updated||null;rebuildIndex();shell();document.title=DATA.title;
+  DATA=normalize(data);BASE=clone(DATA);loadedStamp=DATA.updated||null;rebuildIndex();shell();document.title=DATA.title;
   const hid=decodeURIComponent(location.hash.slice(1));
   const start=P(hid)?hid:pickHome();
   if(start)setFocus(start);else{renderTree();renderSide();}
