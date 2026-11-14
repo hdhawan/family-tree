@@ -522,6 +522,23 @@ function openMerge(id){
       const kids=childrenOf(id);if(mergeInto(id,t)){m.close();markDirty();setFocus(kids[0]&&P(kids[0])?kids[0]:t);toast(ph?'Linked.':'Merged.');}},'primary')]);
 }
 
+/* custodian hint: someone with one parent whose parent has a partner/co-parent — offer to link them */
+function missingParentBox(id){
+  const p=P(id);if(!custodian||!p||p.parents.length!==1)return null;
+  const par=p.parents[0],cands=partnersOf(par).filter(q=>q!==id&&!isAncestorOf(id,q)&&!isEx(par,q));
+  if(!cands.length)return null;
+  const box=h('div',{class:'warn',style:'margin-top:14px'},h('div',{style:'font-weight:600;margin-bottom:4px',text:'Missing a parent?'}),
+    h('div',{style:'font-size:13px;margin-bottom:8px',text:`${dname(p)} is linked to only one parent, ${dname(P(par))}.`}));
+  for(const q of cands){
+    const sibs=childrenOf(par).filter(c=>P(c).parents.length<2&&!isAncestorOf(c,q));
+    const link=ids=>{const w=[];ids.forEach(c=>addParent(c,q,w));rebuildIndex();markDirty();setFocus(id);toast(w.length?w.join(' '):`Linked ${dname(P(q))} as parent.`,5000);};
+    box.append(h('div',{style:'display:flex;flex-wrap:wrap;gap:6px;margin-top:4px'},
+      btn(`${dname(P(q))} is also ${dname(p)}'s parent`,()=>link([id]),'primary'),
+      sibs.length>1?btn(`…and of all: ${sibs.map(c=>dname(P(c))).join(', ')}`,()=>link(sibs)):null));
+  }
+  return box;
+}
+
 /* ---------- encoding for submission codes ---------- */
 function b64e(str){const b=new TextEncoder().encode(str);let s='';for(const x of b)s+=String.fromCharCode(x);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
 function b64d(t){t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';const s=atob(t);const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return new TextDecoder().decode(b);}
@@ -783,7 +800,7 @@ function renderSide(){
   fact('Born',fmtDate(p.born,living)||'Unknown');
   if(!living)fact('Died',fmtDate(p.died,false)||'Date unknown');
   fact('Notes',p.notes);
-  const privBox=privSection(id);
+  const privBox=privSection(id),gapBox=missingParentBox(id);
   const rel=(label,ids)=>ids.length?h('div',{class:'rel'},h('h4',{text:label}),h('div',{class:'chips'},ids.map(i=>h('button',{type:'button',class:'chip',onclick:()=>setFocus(i)},dname(P(i)),h('span',{class:'chip-yr',text:lifespan(P(i))}))))):null;
   const collapsed=sd.classList.contains('collapsed');
   sd.append(
@@ -792,7 +809,7 @@ function renderSide(){
       h('button',{type:'button',class:'icon-btn side-toggle','aria-label':'Show details',text:wide()?'Hide ▸':(collapsed?'Details ▴':'Hide ▾'),onclick:()=>{if(wide())setSideOpen(false);else{sd.classList.toggle('collapsed');renderSide();}}})),
     h('div',{class:'side-more'},facts,
       rel('Parents',sortParents(p.parents.filter(P))),rel('Spouse / partner',partnersOf(id).filter(x=>!isEx(id,x))),rel('Former spouse / partner',partnersOf(id).filter(x=>isEx(id,x))),rel('Siblings',siblingsOf(id)),rel('Children',sortByBirth(childrenOf(id))),
-      privBox,
+      gapBox,privBox,
       h('div',{class:'side-actions'},btn('Add a relative',()=>openAddFlow(id),'primary'),
         custodian?btn('Edit',()=>openEditPerson(id)):null,custodian?btn(isPh(id)?'This is actually…':'Merge into…',()=>openMerge(id)):null,custodian?btn('Delete',()=>deletePerson(id),'danger'):null)));
 }
@@ -836,6 +853,7 @@ function personForm(init,o){
   function refreshHints(){
     const chosen=new Set(relRows.map(r=>r.pk.get()).filter(Boolean));
     relRows.forEach(r=>{r.hint.innerHTML='';const t=r.pk.get();
+      if(r.sel.value==='partner'&&t&&P(t))childrenOf(t).filter(x=>!chosen.has(x)&&P(x).parents.length<2).forEach(x=>r.hint.append(h('button',{type:'button',class:'chip small',text:'+ Also a parent of '+dname(P(x)),onclick:()=>addRelRow('parent',x)})));
       if(r.sel.value==='parent'&&t&&P(t))siblingsOf(t).filter(x=>!chosen.has(x)&&P(x).parents.length<2).forEach(x=>r.hint.append(h('button',{type:'button',class:'chip small',text:'+ Also a parent of '+dname(P(x)),onclick:()=>addRelRow('parent',x)})));
       if(r.sel.value==='child'&&t&&P(t))partnersOf(t).filter(x=>!chosen.has(x)).forEach(x=>r.hint.append(h('button',{type:'button',class:'chip small',text:'+ Also a child of '+name(P(x)),onclick:()=>addRelRow('child',x)})));
     });
