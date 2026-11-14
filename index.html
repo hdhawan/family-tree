@@ -714,6 +714,7 @@ const relLabel=t=>(REL_TYPES.find(x=>x[0]===t)||[0,t])[1];
 
 /* ---------- relatives: add flow → submission code ---------- */
 function openAddFlow(prefill){
+  if(custodian)return openEditPerson(null,prefill); // custodians add directly, no code round-trip
   const sub={v:1,sid:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),by:'',at:new Date().toISOString().slice(0,10),people:[]};
   let n=0,form=null,dupWarned=null;
   const m=modal('Add someone to the tree',{wide:true,sticky:true});
@@ -783,11 +784,11 @@ function afterChange(focusId){
   else if(!P(S.focus))setFocus(pickHome())||(renderTree(),renderSide());
   else{renderTree();renderSide();}
 }
-function openEditPerson(id){
+function openEditPerson(id,prefill){
   const p=id?P(id):null;
   const removals=new Set(),pstate={};
   const treeEmpty=!Object.keys(DATA.people).length;
-  const form=personForm(p?Object.assign({},p,{priv:PRIV[id]}):{},{privLocked:!!(p&&p.priv&&!KEY),pool:()=>treePool(id),requireRel:!p&&!treeEmpty,allowBlankName:p&&p.placeholder,relTitle:p?'Add relationships':'Where do they fit?'});
+  const form=personForm(p?Object.assign({},p,{priv:PRIV[id]}):{},{privLocked:!!(p&&p.priv&&!KEY),pool:()=>treePool(id),requireRel:!p&&!treeEmpty,allowBlankName:p&&p.placeholder,relTitle:p?'Add relationships':'Where do they fit?',rels:!p&&prefill&&P(prefill)?[{type:'',target:prefill}]:[]});
   const m=modal(p?'Edit '+name(p):'Add a person',{wide:true,sticky:true});
   let cur=null;
   if(p){
