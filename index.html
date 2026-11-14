@@ -97,6 +97,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .lbl{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
 .hint{display:block;font-size:12px;color:var(--muted);margin-top:3px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 10px}
+@media(max-width:560px){.row3{grid-template-columns:1fr}}
 @media(max-width:480px){.row2{grid-template-columns:1fr}}
 .radios{display:flex;gap:18px;margin:2px 0 10px}
 .radios label{display:flex;gap:6px;align-items:center;cursor:pointer}
@@ -135,7 +137,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 'use strict';
 /* Family tree — single-file, no server. Data lives in family.json (or embedded above in an offline copy). */
 const W=164,H=60,GX=18,GY=58,PG=26,PAD=50;
-const FIELDS=['given','commonName','surname','birthSurname','sex','born','died','notes'];
+const FIELDS=['given','middleName','commonName','surname','birthSurname','sex','born','died','notes'];
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const REL_TYPES=[['child','is a child of'],['parent','is a parent of'],['partner','is the spouse / partner of'],['expartner','is a former spouse / partner of'],['sibling','is a brother / sister of']];
 const DRAFT_KEY='ft-draft:'+location.pathname;
@@ -209,7 +211,7 @@ function isLiving(p){return stat(p)!=='deceased';}
 const STATUS_LABEL={living:'Living',deceased:'Deceased',unknown:'Not known'};
 /* dname: what the family calls them (common name + surname); fullName: legal name with common name in quotes */
 function dname(p){if(!p)return'Unknown';if(p.commonName&&!p.placeholder)return p.commonName;return name(p);}
-function fullName(p){if(!p)return'Unknown';if(!p.commonName||p.placeholder)return name(p);return[p.given,'“'+p.commonName+'”',p.surname].filter(Boolean).join(' ');}
+function fullName(p){if(!p)return'Unknown';if(p.placeholder&&!p.given)return name(p);return[p.given,p.middleName,p.commonName?'“'+p.commonName+'”':'',p.surname].filter(Boolean).join(' ');}
 function name(p){if(!p)return'Unknown';if(p.placeholder&&!p.given)return'Unknown parent';return[p.given,p.surname].filter(Boolean).join(' ')||'Unnamed';}
 function fmtDate(d,living){
   if(!d)return'';const ap=d[0]==='~';const [y,m,dd]=(ap?d.slice(1):d).split('-');
@@ -306,7 +308,7 @@ function findDups(f,exclude){
   }).map(p=>p.id);
 }
 function treePool(exclude,extra=[]){
-  const items=Object.values(DATA.people).filter(p=>p.id!==exclude).map(p=>({id:p.id,label:dname(p),sub:[p.commonName?name(p):'',lifespan(p),p.birthSurname&&p.birthSurname!==p.surname?'née '+p.birthSurname:''].filter(Boolean).join(' · '),search:(name(p)+' '+p.commonName+' '+p.birthSurname).toLowerCase()}));
+  const items=Object.values(DATA.people).filter(p=>p.id!==exclude).map(p=>({id:p.id,label:dname(p),sub:[p.commonName?name(p):'',lifespan(p),p.birthSurname&&p.birthSurname!==p.surname?'née '+p.birthSurname:''].filter(Boolean).join(' · '),search:(name(p)+' '+p.middleName+' '+p.commonName+' '+p.birthSurname).toLowerCase()}));
   items.sort((a,b)=>a.label.localeCompare(b.label));
   return extra.concat(items);
 }
@@ -762,6 +764,7 @@ function personForm(init,o){
   init=init||{};const f={};
   const field=(label,input,hint)=>h('label',{class:'field'},h('span',{class:'lbl',text:label}),input,hint?h('span',{class:'hint',text:hint}):null);
   f.given=h('input',{type:'text',value:init.given||'',autocomplete:'off'});
+  f.middleName=h('input',{type:'text',value:init.middleName||'',autocomplete:'off'});
   f.surname=h('input',{type:'text',value:init.surname||'',autocomplete:'off'});
   f.commonName=h('input',{type:'text',value:init.commonName||'',autocomplete:'off',placeholder:'e.g. Sunny, Bittu, Pinky'});
   f.birthSurname=h('input',{type:'text',value:init.birthSurname||'',autocomplete:'off'});
@@ -800,7 +803,7 @@ function personForm(init,o){
   }
   const relSec=o.noRels?null:h('div',{class:'relsec'},h('span',{class:'lbl',text:o.relTitle||'How are they related? (recommended)'}),relList,btn(relRows.length?'+ Add another relationship':'+ Add a relationship',()=>addRelRow()));
   const el=h('div',{class:'pform'},
-    h('div',{class:'row2'},field('First name *',f.given),field('Last name *',f.surname)),
+    h('div',{class:'row3'},field('First name *',f.given),field('Middle name',f.middleName),field('Last name *',f.surname)),
     field('Commonly known as (optional)',f.commonName,'The name family actually uses, if different from the first name'),
     field('Birth surname (if different)',f.birthSurname,'For example a maiden name'),
     h('div',{class:'row2'},field('Sex (optional)',f.sex),field('Date of birth (optional)',f.born,'Leave blank if unknown. Year alone is fine; add "c." if approximate.')),
@@ -826,7 +829,7 @@ function personForm(init,o){
     if(!errs.length&&o.requireRel&&!rels.length&&!softRelOk){softRelOk=true;showErr('No relationship added, so this person won\'t be connected to anyone in the tree. If you know how they\'re related, add it above or describe it in Notes. Tap save again to continue without one.');return null;}
     if(errs.length){showErr(errs.join(' '));return null;}
     showErr('');
-    return{priv:o.privLocked?undefined:{residence:f.residence.value.trim(),phone:f.phone.value.trim(),email:f.email.value.trim()},person:{given,commonName:f.commonName.value.trim(),surname,birthSurname:f.birthSurname.value.trim(),sex:f.sex.value,born:b.value,status,deceased,died:deceased?d.value:'',notes:f.notes.value.trim()},rels};
+    return{priv:o.privLocked?undefined:{residence:f.residence.value.trim(),phone:f.phone.value.trim(),email:f.email.value.trim()},person:{given,middleName:f.middleName.value.trim(),commonName:f.commonName.value.trim(),surname,birthSurname:f.birthSurname.value.trim(),sex:f.sex.value,born:b.value,status,deceased,died:deceased?d.value:'',notes:f.notes.value.trim()},rels};
   }
   return{el,read,showErr,addRelRow,isBlank:()=>!f.given.value.trim()&&!f.surname.value.trim()};
 }
@@ -989,7 +992,7 @@ function openImport(){
         const opt=(val,label)=>h('label',{class:'opt'},h('input',{type:'radio',name:rn,checked:choices[key]===val,onchange:()=>{choices[key]=val;}}),h('span',{text:label}));
         const ls=lifespan(Object.assign({placeholder:false},p));
         secs.push(h('div',{class:'box'},
-          h('h4',{text:[p.given,p.commonName?'“'+p.commonName+'”':'',p.surname].filter(Boolean).join(' ')+(p.birthSurname?` (née ${p.birthSurname})`:'')}),
+          h('h4',{text:[p.given,p.middleName,p.commonName?'“'+p.commonName+'”':'',p.surname].filter(Boolean).join(' ')+(p.birthSurname?` (née ${p.birthSurname})`:'')}),
           h('div',{class:'muted',text:[STATUS_LABEL[p.status]||'Not known',ls,(p.rels||[]).map(r=>relLabel(r.type)+' '+targetName(r.target,s)).join('; ')||'No relationship given, so link them with Edit after importing'].filter(Boolean).join(' · ')}),
           p.notes?h('div',{class:'muted',text:'Notes: '+p.notes}):null,
           hasPriv(p.priv)?h('div',{class:'muted',text:'Private: '+[p.priv.residence,p.priv.phone,p.priv.email].filter(Boolean).join(' · ')}):null,
@@ -1075,9 +1078,10 @@ function toGedcom(){
   fams.forEach((f,k)=>{const x='@F'+(++i)+'@';fx.set(k,x);[f.a,f.b].filter(Boolean).forEach(s=>(famsOf[s]=famsOf[s]||[]).push(x));f.kids.forEach(c=>(famcOf[c]=famcOf[c]||[]).push(x));});
   const L=['0 HEAD','1 SOUR FAMILYTREEPAGE','2 NAME Family Tree Page','1 GEDC','2 VERS 5.5.1','2 FORM LINEAGE-LINKED','1 CHAR UTF-8','1 DATE '+gdate(new Date().toISOString().slice(0,10))];
   ids.forEach(id=>{const p=P(id),gv=g(p.given)||(p.placeholder?'Unknown':'');
-    L.push(`0 ${xi[id]} INDI`,`1 NAME ${gv} /${g(p.surname)}/`);
-    if(p.given)L.push('2 GIVN '+g(p.given));if(p.commonName)L.push('2 NICK '+g(p.commonName));if(p.surname)L.push('2 SURN '+g(p.surname));
-    if(p.birthSurname&&p.birthSurname!==p.surname)L.push(`1 NAME ${gv} /${g(p.birthSurname)}/`,'2 TYPE birth');
+    const gvm=[gv,g(p.middleName)].filter(Boolean).join(' ');
+    L.push(`0 ${xi[id]} INDI`,`1 NAME ${gvm} /${g(p.surname)}/`);
+    if(p.given)L.push('2 GIVN '+gvm);if(p.commonName)L.push('2 NICK '+g(p.commonName));if(p.surname)L.push('2 SURN '+g(p.surname));
+    if(p.birthSurname&&p.birthSurname!==p.surname)L.push(`1 NAME ${gvm} /${g(p.birthSurname)}/`,'2 TYPE birth');
     L.push('1 SEX '+(p.sex==='M'||p.sex==='F'?p.sex:'U'));
     if(p.born)L.push('1 BIRT','2 DATE '+gdate(p.born));
     if(p.died)L.push('1 DEAT','2 DATE '+gdate(p.died));else if(stat(p)==='deceased')L.push('1 DEAT Y');
