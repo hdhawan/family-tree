@@ -233,21 +233,36 @@ function parseDate(raw){
   let s=(raw||'').trim();if(!s)return{ok:true,value:''};
   let ap=false;const am=/^(~|c\.|ca\.?|circa|abt\.?|about|approx\.?|c(?=\s))\s*/i.exec(s);
   if(am){ap=true;s=s.slice(am[0].length).trim();}
+  s=s.replace(/(\d)(st|nd|rd|th)\b/gi,'$1').replace(/,/g,' ').replace(/\s+/g,' ').trim();
   const mon=t=>{const i=MON.map(x=>x.toLowerCase()).indexOf(t.slice(0,3).toLowerCase());return i<0?null:i+1;};
-  let y,m,d,x;
+  const SEP='[-/. ]';let y,m,d,x;
   if(x=/^(\d{4})$/.exec(s))y=+x[1];
-  else if(x=/^(\d{4})-(\d{1,2})$/.exec(s)){y=+x[1];m=+x[2];}
-  else if(x=/^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s)){y=+x[1];m=+x[2];d=+x[3];}
-  else if(x=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s)){m=+x[1];d=+x[2];y=+x[3];}
-  else if(x=/^(\d{1,2})\s+([A-Za-z]+)\.?,?\s+(\d{4})$/.exec(s)){d=+x[1];m=mon(x[2]);y=+x[3];}
-  else if(x=/^([A-Za-z]+)\.?\s+(\d{1,2})(st|nd|rd|th)?,?\s+(\d{4})$/.exec(s)){m=mon(x[1]);d=+x[2];y=+x[4];}
-  else if(x=/^([A-Za-z]+)\.?,?\s+(\d{4})$/.exec(s)){m=mon(x[1]);y=+x[2];}
+  else if(x=new RegExp(`^(\\d{4})${SEP}(\\d{1,2})$`).exec(s)){y=+x[1];m=+x[2];}
+  else if(x=new RegExp(`^(\\d{4})${SEP}(\\d{1,2})${SEP}(\\d{1,2})$`).exec(s)){y=+x[1];m=+x[2];d=+x[3];}
+  else if(x=new RegExp(`^(\\d{1,2})${SEP}(\\d{4})$`).exec(s)){m=+x[1];y=+x[2];}
+  else if(x=new RegExp(`^(\\d{1,2})${SEP}(\\d{1,2})${SEP}(\\d{4})$`).exec(s)){
+    const a=+x[1],b=+x[2];y=+x[3];
+    if(a>12&&b<=12){d=a;m=b;}else if(b>12&&a<=12){m=a;d=b;}else if(a===b){d=a;m=b;}
+    else if(a<=12&&b<=12)return{ok:false,why:`"${raw.trim()}" could be ${a} ${MON[b-1]} or ${b} ${MON[a-1]}. Write the month as a word, e.g. ${a} ${MON[b-1]} ${y}.`};
+    else return{ok:false};
+  }
+  else if(x=new RegExp(`^(\\d{1,2})${SEP}([A-Za-z]+)\\.?${SEP}(\\d{4})$`).exec(s)){d=+x[1];m=mon(x[2]);y=+x[3];}
+  else if(x=new RegExp(`^([A-Za-z]+)\\.?${SEP}(\\d{1,2})${SEP}(\\d{4})$`).exec(s)){m=mon(x[1]);d=+x[2];y=+x[3];}
+  else if(x=new RegExp(`^([A-Za-z]+)\\.?${SEP}(\\d{4})$`).exec(s)){m=mon(x[1]);y=+x[2];}
   else return{ok:false};
   if(m===null)return{ok:false};
-  if(y<1000||y>new Date().getFullYear())return{ok:false};
+  if(y<1000||y>new Date().getFullYear())return{ok:false,why:'That year looks wrong.'};
   if(m!==undefined&&(m<1||m>12))return{ok:false};
-  if(d!==undefined){const dt=new Date(y,m-1,d);if(dt.getMonth()!==m-1||dt.getDate()!==d)return{ok:false};}
+  if(d!==undefined){const dt=new Date(y,m-1,d);if(dt.getMonth()!==m-1||dt.getDate()!==d)return{ok:false,why:'That day doesn\'t exist in that month.'};}
   return{ok:true,value:(ap?'~':'')+y+(m?'-'+String(m).padStart(2,'0'):'')+(d?'-'+String(d).padStart(2,'0'):'')};
+}
+/* live "read as" line under a date box, so people see how their date was understood */
+function datePreview(input){
+  const out=h('span',{class:'hint'});
+  const upd=()=>{const v=input.value.trim();if(!v){out.textContent='';out.style.color='';return;}const r=parseDate(v);
+    if(r.ok){out.textContent='✓ Read as '+dateToInput(r.value);out.style.color='var(--alive)';}
+    else{out.textContent=r.why||'Not understood. Try 1952, Mar 1952 or 14 Mar 1952.';out.style.color='var(--danger)';}};
+  input.addEventListener('input',upd);upd();return out;
 }
 function dateToInput(v){if(!v)return'';const ap=v[0]==='~';const [y,m,d]=(ap?v.slice(1):v).split('-');return(ap?'c. ':'')+(d?`${+d} ${MON[+m-1]} ${y}`:m?`${MON[+m-1]} ${y}`:y);}
 const validDate=v=>typeof v==='string'&&/^~?\d{4}(-\d{2}(-\d{2})?)?$/.test(v);
@@ -271,6 +286,9 @@ function cleanFields(f){
 }
 function addParent(c,par,warn){
   const C=P(c);if(!C||!P(par)||c===par||C.parents.includes(par))return;
+  // a shared "Unknown parent" (created when siblings were linked) becomes the real parent for all those siblings
+  const ph=C.parents.find(isPh);
+  if(ph&&!P(par).placeholder&&!isAncestorOf(c,par)&&!childrenOf(par).some(k=>childrenOf(ph).includes(k)&&k!==c)){mergeInto(ph,par);return;}
   if(C.parents.length>=2){warn.push(`${name(C)} already has two parents, so ${name(P(par))} wasn't added as a parent.`);return;}
   if(isAncestorOf(c,par)){warn.push(`Skipped: ${name(P(par))} can't be a parent of ${name(C)} (that would loop the tree).`);return;}
   C.parents.push(par);
@@ -482,6 +500,26 @@ async function refreshFromGitHub(){
   try{const latest=await ghFetchLatest();
     if(!dirty&&canon(latest.data)!==canon(BASE)){DATA=latest.data;BASE=clone(DATA);rebuildIndex();loadedStamp=DATA.updated;setFocus(P(S.focus)?S.focus:pickHome());toast('Loaded the latest version from GitHub.');}
   }catch(e){}
+}
+
+/* merge one person into another: used to fill in an "Unknown parent" or to fix a duplicate */
+function mergeInto(src,dst){
+  const S_=P(src),D=P(dst);if(!S_||!D||src===dst)return false;
+  for(const c of childrenOf(src)){const C=P(c);C.parents=[...new Set(C.parents.map(x=>x===src?dst:x))].filter(x=>x!==c).slice(0,2);}
+  for(const q of S_.parents)if(D.parents.length<2&&!D.parents.includes(q)&&q!==dst)D.parents.push(q);
+  for(const q of S_.partners)if(q!==dst&&P(q)){isEx(src,q)?setEx(dst,q,true):linkPartners(dst,q);}
+  if(!S_.placeholder){for(const k of FIELDS)if(!D[k]&&S_[k])D[k]=S_[k];if(D.status==='unknown'&&S_.status!=='unknown'){D.status=S_.status;D.deceased=S_.deceased;}if(!D.priv&&S_.priv){D.priv=S_.priv;if(PRIV[src])PRIV[dst]=PRIV[src];}}
+  if(DATA.home===src)DATA.home=dst;
+  purge(src);rebuildIndex();return true;
+}
+const isPh=id=>{const p=P(id);return!!(p&&p.placeholder&&!p.given);};
+function openMerge(id){
+  const p=P(id),ph=isPh(id);
+  const pk=picker(()=>treePool(id).filter(x=>!isAncestorOf(id,x.id)&&!isAncestorOf(x.id,id)),null);
+  const m=modal(ph?'Who is this unknown parent?':'Merge '+fullName(p)+' into…',{wide:true});
+  m.set([h('p',{text:ph?`Pick the real person this placeholder stands for. Everyone linked to "Unknown parent" (${childrenOf(id).map(c=>dname(P(c))).join(', ')}) will be linked to them instead.`:`Use this when the same person was added twice. ${fullName(p)} will be removed and all their relationships moved to the person you pick. Details only fill in blanks; nothing already there is overwritten.`}),pk.el],
+    [btn('Cancel',()=>m.close()),btn(ph?'Link them':'Merge',()=>{const t=pk.get();if(!t){toast('Pick a person first.');return;}
+      const kids=childrenOf(id);if(mergeInto(id,t)){m.close();markDirty();setFocus(kids[0]&&P(kids[0])?kids[0]:t);toast(ph?'Linked.':'Merged.');}},'primary')]);
 }
 
 /* ---------- encoding for submission codes ---------- */
@@ -756,7 +794,7 @@ function renderSide(){
       rel('Parents',sortParents(p.parents.filter(P))),rel('Spouse / partner',partnersOf(id).filter(x=>!isEx(id,x))),rel('Former spouse / partner',partnersOf(id).filter(x=>isEx(id,x))),rel('Siblings',siblingsOf(id)),rel('Children',sortByBirth(childrenOf(id))),
       privBox,
       h('div',{class:'side-actions'},btn('Add a relative',()=>openAddFlow(id),'primary'),
-        custodian?btn('Edit',()=>openEditPerson(id)):null,custodian?btn('Delete',()=>deletePerson(id),'danger'):null)));
+        custodian?btn('Edit',()=>openEditPerson(id)):null,custodian?btn(isPh(id)?'This is actually…':'Merge into…',()=>openMerge(id)):null,custodian?btn('Delete',()=>deletePerson(id),'danger'):null)));
 }
 
 /* ---------- person form (shared by relatives and custodians) ---------- */
@@ -774,7 +812,7 @@ function personForm(init,o){
   const st0=init.status||'unknown';
   f.liv=h('input',{type:'radio',name:rn,checked:st0==='living'});f.dec=h('input',{type:'radio',name:rn,checked:st0==='deceased'});f.unk=h('input',{type:'radio',name:rn,checked:st0==='unknown'});
   f.died=h('input',{type:'text',value:dateToInput(init.died),placeholder:'Leave blank if not known'});
-  const diedWrap=field('Date of death (optional)',f.died);diedWrap.hidden=st0!=='deceased';
+  const diedWrap=field('Date of death (optional)',f.died);diedWrap.insertBefore(datePreview(f.died),null);diedWrap.hidden=st0!=='deceased';
   [f.liv,f.dec,f.unk].forEach(r=>r.addEventListener('change',()=>{diedWrap.hidden=!f.dec.checked;}));
   const pv=init.priv||{};
   f.residence=h('input',{type:'text',value:pv.residence||'',placeholder:'City, state / country',disabled:!!o.privLocked});
@@ -798,6 +836,7 @@ function personForm(init,o){
   function refreshHints(){
     const chosen=new Set(relRows.map(r=>r.pk.get()).filter(Boolean));
     relRows.forEach(r=>{r.hint.innerHTML='';const t=r.pk.get();
+      if(r.sel.value==='parent'&&t&&P(t))siblingsOf(t).filter(x=>!chosen.has(x)&&P(x).parents.length<2).forEach(x=>r.hint.append(h('button',{type:'button',class:'chip small',text:'+ Also a parent of '+dname(P(x)),onclick:()=>addRelRow('parent',x)})));
       if(r.sel.value==='child'&&t&&P(t))partnersOf(t).filter(x=>!chosen.has(x)).forEach(x=>r.hint.append(h('button',{type:'button',class:'chip small',text:'+ Also a child of '+name(P(x)),onclick:()=>addRelRow('child',x)})));
     });
   }
@@ -806,7 +845,7 @@ function personForm(init,o){
     h('div',{class:'row3'},field('First name *',f.given),field('Middle name',f.middleName),field('Last name *',f.surname)),
     field('Commonly known as (optional)',f.commonName,'The name family actually uses, if different from the first name'),
     field('Birth surname (if different)',f.birthSurname,'For example a maiden name'),
-    h('div',{class:'row2'},field('Sex (optional)',f.sex),field('Date of birth (optional)',f.born,'Leave blank if unknown. Year alone is fine; add "c." if approximate.')),
+    h('div',{class:'row2'},field('Sex (optional)',f.sex),(()=>{const fl=field('Date of birth (optional)',f.born,'Leave blank if unknown. Year alone is fine; add "c." if approximate.');fl.insertBefore(datePreview(f.born),fl.querySelector('.hint'));return fl;})()),
     h('span',{class:'lbl',text:'Living or deceased?'}),h('div',{class:'radios'},h('label',{},f.liv,'Living'),h('label',{},f.dec,'Deceased'),h('label',{},f.unk,'Not sure')),
     diedWrap,field('Notes',f.notes),
     h('div',{class:'relsec'},h('span',{class:'lbl',text:'Where they live & how to reach them (optional, private)'}),
@@ -821,8 +860,8 @@ function personForm(init,o){
     const errs=[],given=f.given.value.trim(),surname=f.surname.value.trim();
     if(!given&&!o.allowBlankName)errs.push('First name is needed.');
     if(!surname&&!o.allowBlankName)errs.push('Last name is needed.');
-    const b=parseDate(f.born.value);if(!b.ok)errs.push('Date of birth not understood — try 1952, Mar 1952 or 14 Mar 1952.');
-    const status=f.dec.checked?'deceased':f.liv.checked?'living':'unknown',deceased=status==='deceased',d=parseDate(deceased?f.died.value:'');if(!d.ok)errs.push('Date of death not understood.');
+    const b=parseDate(f.born.value);if(!b.ok){errs.push('Date of birth: '+(b.why||'not understood — try 1952, Mar 1952 or 14 Mar 1952.'));f.born.focus();}
+    const status=f.dec.checked?'deceased':f.liv.checked?'living':'unknown',deceased=status==='deceased',d=parseDate(deceased?f.died.value:'');if(!d.ok){errs.push('Date of death: '+(d.why||'not understood — try 1990, Mar 1990 or 14 Mar 1990.'));f.died.focus();}
     if(b.ok&&d.ok&&year(b.value)&&year(d.value)&&year(d.value)<year(b.value))errs.push('Date of death is before date of birth.');
     const rels=[];
     for(const r of relRows){if(!r.sel.value&&!r.pk.get())continue;if(!r.sel.value||!r.pk.get()){errs.push('Finish each relationship (how they are related and to whom), or remove it with ✕.');break;}rels.push({type:r.sel.value,target:r.pk.get()});}
