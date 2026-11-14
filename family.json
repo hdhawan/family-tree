@@ -1,7 +1,7 @@
 {
  "format": "family-tree/1",
  "title": "Our Family Tree",
- "updated": "2026-11-14T13:33:50.361Z",
+ "updated": "2026-11-14T13:37:31.210Z",
  "home": "plifohlwv",
  "custodians": [],
  "imported": [
@@ -54,21 +54,21 @@
   },
   "pjkc67wxr": {
    "id": "pjkc67wxr",
-   "given": "",
+   "given": "Shyam",
    "surname": "Dhawan",
    "birthSurname": "",
-   "sex": "",
-   "born": "",
+   "sex": "M",
+   "born": "1953-06-06",
    "died": "",
-   "deceased": false,
-   "status": "unknown",
+   "deceased": true,
+   "status": "deceased",
    "notes": "",
    "parents": [],
    "partners": [],
    "ex": [],
-   "placeholder": true,
-   "commonName": "",
-   "middleName": ""
+   "placeholder": false,
+   "commonName": "Shyam, Kaka",
+   "middleName": "Sunder"
   },
   "pp3ugvhpb": {
    "id": "pp3ugvhpb",
@@ -81,12 +81,75 @@
    "deceased": true,
    "status": "deceased",
    "notes": "",
-   "parents": [],
+   "parents": [
+    "p39pgg3e7"
+   ],
    "partners": [],
    "ex": [],
    "placeholder": false,
    "commonName": "Bubbly",
    "middleName": ""
+  },
+  "pyjoy4cr3": {
+   "id": "pyjoy4cr3",
+   "given": "Rajesh",
+   "surname": "Arora",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "",
+   "parents": [
+    "p39pgg3e7"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": "Raju",
+   "priv": "wR9iiB6uh0zd0Y7L/hsoVYilmvT+eEfj4F0fnj3BknY6PYGPnGnMfwjENOF0d6lLi4dfCIdyiMew3oXjc7+g7Dti2X8hhKsPlAj0xQZLhrux6wHj+UI8GyhhmqQ="
+  },
+  "p39pgg3e7": {
+   "id": "p39pgg3e7",
+   "given": "Yashpal",
+   "surname": "Arora",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "deceased": true,
+   "status": "deceased",
+   "notes": "",
+   "parents": [],
+   "partners": [
+    "pb9wq0op7"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": ""
+  },
+  "pb9wq0op7": {
+   "id": "pb9wq0op7",
+   "given": "Suman",
+   "surname": "Arora",
+   "birthSurname": "",
+   "sex": "F",
+   "born": "",
+   "died": "1985-09-04",
+   "deceased": true,
+   "status": "deceased",
+   "notes": "",
+   "parents": [],
+   "partners": [
+    "p39pgg3e7"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": ""
   }
  },
  "vault": {
