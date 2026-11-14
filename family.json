@@ -1,9 +1,72 @@
 {
  "format": "family-tree/1",
  "title": "Our Family Tree",
- "updated": null,
- "home": null,
+ "updated": "2026-11-14T13:08:22.785Z",
+ "home": "plifohlwv",
  "custodians": [],
- "imported": [],
- "people": {}
+ "imported": [
+  "smwgf3x5k3lb0"
+ ],
+ "people": {
+  "plifohlwv": {
+   "id": "plifohlwv",
+   "given": "Harshit",
+   "surname": "Dhawan",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "1985-11-04",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "Place of birth: Delhi",
+   "parents": [
+    "pjkc67wxr"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "commonName": "Sunny",
+   "priv": "UoRp+Q22GjBvLbuckMbMNPII6my2s80MMeSxpfaPsNWnPqOC1arJpFp5mBwV2amGL3I9cwciV9izQM4rBdbxoJnVKQZ/dsy+h7aTd89DJ8lST2J0QMNFMISeRfsedKSYczI/L+EhbOOLI/1YD1Q8"
+  },
+  "pkf2buonk": {
+   "id": "pkf2buonk",
+   "given": "Nimisha",
+   "surname": "Khan",
+   "birthSurname": "Dhawan",
+   "sex": "F",
+   "born": "1982-10-10",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "",
+   "parents": [
+    "pjkc67wxr"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "commonName": "Mithu",
+   "priv": "6pf5n3q4YEW540cZzJH+oyyRWm+Z7qRb7Vl/tgO61Mv3W0KlVQBfbFCOgrr7EHoWzg92/Un8JMl3DtsGNFgvGy3Z4M7m5nqGBaok8cm6onQIM/C7IZtHSkAiTGxnQM6x08Y="
+  },
+  "pjkc67wxr": {
+   "id": "pjkc67wxr",
+   "given": "",
+   "surname": "Dhawan",
+   "birthSurname": "",
+   "sex": "",
+   "born": "",
+   "died": "",
+   "deceased": false,
+   "status": "unknown",
+   "notes": "",
+   "parents": [],
+   "partners": [],
+   "ex": [],
+   "placeholder": true
+  }
+ },
+ "vault": {
+  "salt": "LDWjuBpDYVOfcTKGa3cWMQ==",
+  "check": "T3faNE3aTaPYFezbPVmg+BIqe1IYIkzRfl3ilQZfF9w="
+ }
 }
