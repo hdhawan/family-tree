@@ -1,7 +1,7 @@
 {
  "format": "family-tree/1",
  "title": "Our Family Tree",
- "updated": "2026-11-16T17:20:31.209Z",
+ "updated": "2026-11-16T17:26:17.054Z",
  "home": "plifohlwv",
  "custodians": [],
  "imported": [
@@ -24,7 +24,9 @@
     "pjkc67wxr",
     "pp3ugvhpb"
    ],
-   "partners": [],
+   "partners": [
+    "pr24q9igp"
+   ],
    "ex": [],
    "placeholder": false,
    "commonName": "Sunny",
@@ -46,7 +48,9 @@
     "pjkc67wxr",
     "pp3ugvhpb"
    ],
-   "partners": [],
+   "partners": [
+    "pmeb9ub53"
+   ],
    "ex": [],
    "placeholder": false,
    "commonName": "Mithu",
@@ -173,7 +177,9 @@
     "p39pgg3e7",
     "pb9wq0op7"
    ],
-   "partners": [],
+   "partners": [
+    "p1mkyhx47"
+   ],
    "ex": [],
    "placeholder": false,
    "middleName": "",
@@ -329,6 +335,178 @@
    "middleName": "",
    "commonName": "",
    "priv": "OcFptF9BMA7m6PO3XcoOclm8NTeBI+ac/Agf9D3DHpbw4zS4GN/neiGaQUlFET/B7shpJYYOMygAl+DC0KYM7BTbBIDQDga4vxtQ"
+  },
+  "pmeb9ub53": {
+   "id": "pmeb9ub53",
+   "given": "Fazal",
+   "surname": "Khan",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "",
+   "parents": [],
+   "partners": [
+    "pkf2buonk"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": "",
+   "priv": "g9WlDSA0dPhZzAPxCApCt3ggeaEkItqeuyqbMChOOv/8vfPhSCsE9KBdgtNjT4+U5oKtEmSiyyxKmEYXFd9iKOWaqURCz9+WQw=="
+  },
+  "pxlr1pfcz": {
+   "id": "pxlr1pfcz",
+   "given": "Seher",
+   "surname": "Khan",
+   "birthSurname": "",
+   "sex": "F",
+   "born": "",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "",
+   "parents": [
+    "pmeb9ub53",
+    "pkf2buonk"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": "",
+   "priv": "q7GBYdkd2SKmUBfoKHzopvPAsftZ+rdPnEmm1rHF2KpPO/sxjwSsbwlCQvLrsTKfI1knZcBlUqk8Nu9RsQ7qB61hsVgkgtU0Iw=="
+  },
+  "pr24q9igp": {
+   "id": "pr24q9igp",
+   "given": "Preeti",
+   "surname": "Kaushik",
+   "birthSurname": "",
+   "sex": "F",
+   "born": "",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "",
+   "parents": [],
+   "partners": [
+    "plifohlwv"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": "",
+   "priv": "a+JvnncJ6wM3JmdVUPTrUDmQ7poZE2HnsSZd976SP/bAq9o8aR85j5i6pqGtbkdrcdwOzf6fzY0jrewj+z2U0H8/5PTGDJAOs5KfzA=="
+  },
+  "p55zh5osa": {
+   "id": "p55zh5osa",
+   "given": "Aarin",
+   "surname": "Dhawan",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "2019-11",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "",
+   "parents": [
+    "pr24q9igp",
+    "plifohlwv"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": "",
+   "priv": "wH+4MTW0PQASB17XwdvmVZki3bw23I/JDtaWWIyUkoiESQc8zoJVHNeBJd6hO2/QEWGUwhY2db26+Emenjq0qsUN+nEOAqIWVMRXog=="
+  },
+  "pcvml2g8f": {
+   "id": "pcvml2g8f",
+   "given": "Aahir",
+   "surname": "Dhawan",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "2023-11",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "",
+   "parents": [
+    "pr24q9igp",
+    "plifohlwv"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": "",
+   "priv": "odbb/xflc5bKZF6Oy9InsW+5uN9Fc/HePxJz5bpT62x6ePfL0ogDfYsXWyOfDnTY+ZQaITuyTmhArkKr7Mt60LqPz18N0CVbewOarg=="
+  },
+  "p1mkyhx47": {
+   "id": "p1mkyhx47",
+   "given": "Vijai",
+   "surname": "Sharma",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "",
+   "parents": [],
+   "partners": [
+    "p2q24g3dz"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": ""
+  },
+  "pr8xjl482": {
+   "id": "pr8xjl482",
+   "given": "Tushar",
+   "surname": "Sharma",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "",
+   "parents": [
+    "p1mkyhx47",
+    "p2q24g3dz"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": "Bittu",
+   "priv": "Q2l7ofG3bfPsCo8tXJsW+XRT9IB7kJK6qpK3bTQpuGng9bRkyugGRKLNd/9/BbpvfEK9FRAZ3qVzk+ZpsRm2H09g7SyFiCVz5w=="
+  },
+  "p5mm4leha": {
+   "id": "p5mm4leha",
+   "given": "Milind",
+   "surname": "Sharma",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "",
+   "parents": [
+    "p1mkyhx47",
+    "p2q24g3dz"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": "Kittu",
+   "priv": "EYNKSYLMYCXyDO4RadB/dLNjOMvSSGTYb8btEpK6fmcBPPleVN0ThIB4tVme1xfD2KuqRWGRs1A/giRjibCFKXIUZR9rrRL83EVY"
   }
  },
  "vault": {
