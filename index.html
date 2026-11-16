@@ -330,8 +330,10 @@ const validDate=v=>typeof v==='string'&&!!dparts(v);
 function isAncestorOf(x,y){const st=[...P(y).parents],seen=new Set();while(st.length){const c=st.pop();if(c===x)return true;if(seen.has(c)||!P(c))continue;seen.add(c);st.push(...P(c).parents);}return false;}
 function createPerson(f){
   const id=rid('p');
-  DATA.people[id]={id,given:'',surname:'',birthSurname:'',sex:'',born:'',died:'',deceased:false,status:'unknown',notes:'',parents:[],partners:[],ex:[],placeholder:false};
-  Object.assign(DATA.people[id],cleanFields(f));
+  // every text field starts as '' (placeholders made here used to lack the newer name fields, which broke the duplicate check)
+  const rec={id,deceased:false,status:'unknown',parents:[],partners:[],ex:[],placeholder:false};
+  for(const k of FIELDS)rec[k]='';
+  DATA.people[id]=Object.assign(rec,cleanFields(f));
   return id;
 }
 function cleanFields(f){
@@ -393,15 +395,16 @@ function findDups(f,exclude){
   if(!g)return[];
   return Object.values(DATA.people).filter(p=>{
     if(p.id===exclude)return false;
-    const pn=[p.given.toLowerCase(),p.commonName.toLowerCase()].filter(Boolean);
+    const lc=v=>String(v||'').toLowerCase();
+    const pn=[lc(p.given),lc(p.commonName)].filter(Boolean);
     if(!pn.includes(g)&&!(cn&&pn.includes(cn)))return false;
-    const names=[p.surname.toLowerCase(),p.birthSurname.toLowerCase()].filter(Boolean);
+    const names=[lc(p.surname),lc(p.birthSurname)].filter(Boolean);
     if(!names.includes(s)&&!(bs&&names.includes(bs)))return false;
     const py=year(p.born);return!by||!py||Math.abs(by-py)<=1;
   }).map(p=>p.id);
 }
 function treePool(exclude,extra=[]){
-  const items=Object.values(DATA.people).filter(p=>p.id!==exclude).map(p=>({id:p.id,label:dname(p),sub:[p.commonName?name(p):'',lifespan(p),p.birthSurname&&p.birthSurname!==p.surname?'née '+p.birthSurname:''].filter(Boolean).join(' · '),search:(name(p)+' '+p.middleName+' '+p.commonName+' '+p.birthSurname).toLowerCase()}));
+  const items=Object.values(DATA.people).filter(p=>p.id!==exclude).map(p=>({id:p.id,label:dname(p),sub:[p.commonName?name(p):'',lifespan(p),p.birthSurname&&p.birthSurname!==p.surname?'née '+p.birthSurname:''].filter(Boolean).join(' · '),search:[name(p),p.middleName,p.commonName,p.birthSurname].filter(Boolean).join(' ').toLowerCase()}));
   items.sort((a,b)=>a.label.localeCompare(b.label));
   return extra.concat(items);
 }
