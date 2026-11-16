@@ -1,7 +1,7 @@
 {
  "format": "family-tree/1",
  "title": "Our Family Tree",
- "updated": "2026-11-16T17:53:40.522Z",
+ "updated": "2026-11-16T17:56:13.834Z",
  "home": "plifohlwv",
  "custodians": [],
  "imported": [
@@ -878,7 +878,9 @@
     "p2z2jw34o",
     "ps51a3c3f"
    ],
-   "partners": [],
+   "partners": [
+    "pqwkjcl6o"
+   ],
    "ex": [],
    "placeholder": false,
    "middleName": "",
@@ -927,6 +929,27 @@
    "middleName": "",
    "commonName": "",
    "priv": "3AKd3xgJ1XMeBf18UNv66e/xMfFaRqmsoOWihHLIx05aR8VS05ytDKMMV1X2mxK46XZOy3TxRZDffWvrIUdgORecJgS1FKlD1w=="
+  },
+  "pqwkjcl6o": {
+   "id": "pqwkjcl6o",
+   "given": "Rolando",
+   "surname": "Delacruz",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "",
+   "parents": [],
+   "partners": [
+    "ps9n1j90g"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": "",
+   "priv": "cCl/kZrG2ct33nZs2eOfmp8Er9av7GlYGEwuk4v8ZctweTLW6URIiSHnwwp603FWtvxa58bBmVAx4aXKSZhdYEoRjyrJHuwuERY="
   }
  },
  "vault": {
