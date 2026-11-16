@@ -1328,7 +1328,7 @@ function openAddFlow(prefill){
       sub.people.map((p,i)=>h('div',{class:'curr'},h('span',{text:`${p.given} ${p.surname} — ${p.rels.map(r=>relLabel(r.type)+' '+targetName(r.target,sub)+viaText(r)).join('; ')||'first person'}`}),
         h('button',{type:'button',class:'icon-btn',text:'✕','aria-label':'Remove',onclick:()=>{sub.people.splice(i,1);stepForm();}})))):null;
     m.set([
-      !sub.people.length?h('p',{class:'muted',text:'Add one person at a time. You can add several before sending. When you finish you get a short code to send to a family custodian, who adds everyone to the tree.'}):null,
+      !sub.people.length?h('p',{class:'muted',text:relayOn()?'Add one person at a time. You can add several before sending. When you tap Finish, everything goes to a family custodian, who checks it and adds it to the tree.':'Add one person at a time. You can add several before sending. When you finish you get a short code to send to a family custodian, who adds everyone to the tree.'}):null,
       h('label',{class:'field'},h('span',{class:'lbl',text:'Your name'}),byInp),
       list,h('div',{class:'lbl',style:'font:600 16px var(--serif);margin:12px 0 8px',text:sub.people.length?'Next person':'Person to add'}),form.el],
       [btn('Cancel',m.close),btn('Save & add another',()=>{if(saveCurrent())stepForm();}),btn('Finish',finish,'primary')]);
