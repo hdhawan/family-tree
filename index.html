@@ -50,12 +50,19 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .card .yr{font-size:11.5px;line-height:1.25;color:var(--muted);margin-top:2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .card.has-cn .nm{-webkit-line-clamp:1}
 .card.focus{background:#fff6dc;outline:2px solid #24231f;outline-offset:3px;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.card.hi{background:#fffaf0;box-shadow:0 0 0 3px #e9c46a}
+.stage.has-sel .card:not(.hi):not(.focus){opacity:.42}
+.grp-label{position:absolute;font:600 13px var(--sans);color:var(--muted);white-space:nowrap}
 .card.ph{border-style:dashed;background:transparent}
 .card.ph .nm{color:var(--muted);font-style:italic}
 .tg{position:absolute;left:50%;transform:translateX(-50%);min-width:32px;height:22px;border-radius:11px;border:1px solid #cfc7b6;background:#fff;font:600 12px/20px var(--sans);color:var(--accent);cursor:pointer;padding:0 8px;z-index:2}
 .tg:hover{background:#e6eee8}
 .tg-down{bottom:-12px}
 .tg-up{top:-12px}
+.cnt{position:absolute;top:-10px;right:8px;display:inline-flex;align-items:center;gap:3px;height:19px;padding:0 6px;border-radius:10px;background:#fff;border:1px solid #cfc7b6;font:600 11px/1 var(--sans);color:var(--muted);z-index:2;pointer-events:none}
+.cnt svg{width:12px;height:12px}
+.cnt.more{background:#24231f;border-color:#24231f;color:#fff}
+.legend .cnt{position:static;display:inline-flex;margin:0 3px 0 10px;vertical-align:-4px}
 .zoom{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;z-index:5}
 .zoom button{width:40px;height:40px;border-radius:20px;border:1px solid #cfc7b6;background:#fff;font-size:18px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.1)}
 .legend{position:absolute;left:12px;bottom:12px;font-size:12px;color:var(--muted);background:rgba(246,243,236,.92);padding:6px 10px;border-radius:8px;z-index:4;pointer-events:none}
@@ -97,6 +104,10 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .lbl{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
 .hint{display:block;font-size:12px;color:var(--muted);margin-top:3px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.dategrp{display:grid;grid-template-columns:5.5em 1fr 5.5em auto;gap:6px;align-items:center}
+.dategrp .approx{display:flex;gap:5px;align-items:center;font-size:14px;white-space:nowrap;cursor:pointer}
+.dategrp .approx input{width:auto;margin:0}
+@media(max-width:420px){.dategrp{grid-template-columns:5em 1fr 5em}.dategrp .approx{grid-column:1/-1}}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 10px}
 @media(max-width:560px){.row3{grid-template-columns:1fr}}
 @media(max-width:480px){.row2{grid-template-columns:1fr}}
@@ -121,6 +132,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all}
 .box{border:1px solid #e4ded1;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff}
 .box h4{margin:0 0 2px;font:600 15px var(--serif)}
+.pend{border:1px solid #d6cfbf;border-radius:12px;padding:10px 12px 12px;margin-bottom:14px;background:#fbf8f1}
+.pend-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
 .opt{display:flex;gap:8px;align-items:flex-start;margin-top:6px;font-size:14px;cursor:pointer}
 .opt input{width:auto;margin:3px 0 0}
 .empty{padding:60px 20px;text-align:center;color:var(--muted);max-width:420px;margin:0 auto}
@@ -139,12 +152,49 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 const W=164,H=60,GX=18,GY=58,PG=26,PAD=50;
 const FIELDS=['given','middleName','commonName','surname','birthSurname','sex','born','died','notes'];
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const REL_TYPES=[['child','is a child of'],['parent','is a parent of'],['partner','is the spouse / partner of'],['expartner','is a former spouse / partner of'],['sibling','is a brother / sister of']];
+const MON_FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const REL_TYPES=[['child','is a child of'],['parent','is a parent of'],['partner','is the spouse / partner of'],['expartner','is a former spouse / partner of'],['sibling','is a brother / sister of'],['cousin-m','is a cousin brother of'],['cousin-f','is a cousin sister of']];
+const isCousin=t=>t==='cousin-m'||t==='cousin-f';
+/* which side a cousin is on: one of the person's aunts/uncles, or a parent's side where that aunt/uncle isn't in the tree yet */
+function sideOf(q){const x=P(q)&&P(q).sex;return x==='M'?'Paternal':x==='F'?'Maternal':null;}
+function cousinVia(t){
+  const T=P(t);if(!T)return[['',"Their parents aren't in the tree yet"]];
+  const ps=sortParents(T.parents.filter(P)),opts=[];
+  for(const q of ps){
+    const sd=sideOf(q),side=sd?`${sd} (${sd==='Paternal'?"father's":"mother's"} side)`:`Through ${dname(P(q))}`,who=sd?(sd==='Paternal'?'father':'mother'):dname(P(q));
+    for(const u of siblingsOf(q)){
+      if(isPh(u)){const k=childrenOf(u).map(x=>dname(P(x)));if(k.length)opts.push(['p:'+u,`${side}: same parent as ${k.join(', ')}`]);}
+      else opts.push(['p:'+u,`${side}: child of ${dname(P(u))}, ${who}'s ${P(u).sex==='F'?'sister':P(u).sex==='M'?'brother':'sibling'}`]);
+    }
+    opts.push(['q:'+q,`${side}: their parent isn't in the tree yet`]);
+  }
+  if(ps.length<2){
+    if(!ps.some(q=>P(q).sex==='M'))opts.push(['side:M',"Paternal (father's side): their parent isn't in the tree yet"]);
+    if(!ps.some(q=>P(q).sex==='F'))opts.push(['side:F',"Maternal (mother's side): their parent isn't in the tree yet"]);
+  }
+  return opts.sort((a,b)=>a[1].startsWith('Maternal')-b[1].startsWith('Maternal'));
+}
+function viaText(r){
+  if(!r||!isCousin(r.type)||!r.via)return'';
+  if(r.via==='side:M')return' (paternal)';if(r.via==='side:F')return' (maternal)';
+  const id=r.via.slice(2);if(!P(id))return'';
+  if(r.via[0]==='q'){const sd=sideOf(id);return sd?` (${sd.toLowerCase()})`:` (${dname(P(id))}'s side)`;}
+  const T=P(r.target),q=T&&T.parents.find(x=>P(x)&&siblingsOf(x).includes(id)),sd=q&&sideOf(q);
+  return ` (${sd?sd.toLowerCase()+', ':''}${isPh(id)?'parent not in the tree yet':'child of '+dname(P(id))})`;
+}
+function cousinsOf(id){
+  const out=new Map();
+  for(const q of sortParents(P(id).parents.filter(P))){
+    const label=sideOf(q)?sideOf(q)+' cousins':`Cousins through ${dname(P(q))}`;if(!out.has(label))out.set(label,new Set());
+    for(const u of siblingsOf(q))for(const c of childrenOf(u))if(c!==id)out.get(label).add(c);
+  }
+  return[...out].filter(([,v])=>v.size).map(([k,v])=>[k,sortByBirth([...v])]);
+}
 /* storage keys ignore index.html / trailing-slash differences, so …/family-tree/ and …/family-tree/index.html share the same saved token and drafts */
 const PAGE_PATH=(()=>{let p=location.pathname.replace(/[^/]*\.html?$/i,'');if(!p.endsWith('/'))p+='/';return p;})();
 const DRAFT_KEY='ft-draft:'+PAGE_PATH;
 let DATA=null,KIDS={},custodian=false,dirty=false,loadedStamp=null;
-const S={focus:null,up:new Set(),down:new Set(),zoom:1};
+const S={focus:null,up:new Set(),down:new Set(),zoom:1,view:'focus',allFit:false,allSel:null};
 
 /* ---------- tiny DOM helper ---------- */
 const $=(s,r=document)=>r.querySelector(s);
@@ -214,11 +264,29 @@ const STATUS_LABEL={living:'Living',deceased:'Deceased',unknown:'Not known'};
 /* dname: what the family calls them (common name + surname); fullName: legal name with common name in quotes */
 function dname(p){if(!p)return'Unknown';if(p.commonName&&!p.placeholder)return p.commonName;return name(p);}
 function fullName(p){if(!p)return'Unknown';if(p.placeholder&&!p.given)return name(p);return[p.given,p.middleName,p.commonName?'“'+p.commonName+'”':'',p.surname].filter(Boolean).join(' ');}
-function name(p){if(!p)return'Unknown';if(p.placeholder&&!p.given)return'Unknown parent';return[p.given,p.surname].filter(Boolean).join(' ')||'Unnamed';}
-function fmtDate(d,living){
-  if(!d)return'';const ap=d[0]==='~';const [y,m,dd]=(ap?d.slice(1):d).split('-');
-  let out;if(living&&!custodian)out=y;else if(dd)out=`${+dd} ${MON[+m-1]} ${y}`;else if(m)out=`${MON[+m-1]} ${y}`;else out=y;
-  return(ap?'c. ':'')+out;
+function name(p){if(!p)return'Unknown';if(p.placeholder&&!p.given)return p.sex==='M'?'Unknown father':p.sex==='F'?'Unknown mother':'Unknown parent';return[p.given,p.surname].filter(Boolean).join(' ')||'Unnamed';}
+/* dates are stored as [~]YYYY[-MM[-DD]] ("~" = approximate year) or, when the year is unknown, --MM[-DD] */
+function dparts(v){
+  if(!v)return null;let ap=false;if(v[0]==='~'){ap=true;v=v.slice(1);}let m;
+  let r=null;
+  if(m=/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/.exec(v))r={ap,y:+m[1],m:m[2]?+m[2]:null,d:m[3]?+m[3]:null};
+  else if(m=/^--(\d{2})(?:-(\d{2}))?$/.exec(v))r={ap:false,y:null,m:+m[1],d:m[2]?+m[2]:null};
+  if(!r||(r.m!==null&&(r.m<1||r.m>12))||(r.d!==null&&(r.d<1||r.d>new Date(r.y||2000,r.m,0).getDate())))return null;
+  return r;
+}
+function dstr(p){
+  if(!p||(!p.y&&!p.m))return'';
+  const mm=p.m?String(p.m).padStart(2,'0'):'',dd=p.d&&p.m?String(p.d).padStart(2,'0'):'';
+  if(p.y)return(p.ap?'~':'')+p.y+(mm?'-'+mm+(dd?'-'+dd:''):'');
+  return'--'+mm+(dd?'-'+dd:'');
+}
+/* living people show only their birth year to non-custodians; force shows everything (used for previews) */
+function fmtDate(v,living,force){
+  const p=dparts(v);if(!p)return'';
+  if(living&&!custodian&&!force)return p.y?(p.ap?'c. ':'')+p.y:'';
+  const dm=p.m?(p.d?`${p.d} ${MON[p.m-1]}`:MON_FULL[p.m-1]):'';
+  if(!p.y)return dm+' (year unknown)';
+  return(p.ap?'c. ':'')+(dm?dm+' ':'')+p.y;
 }
 function lifespan(p){
   if(!p||p.placeholder)return'';
@@ -258,16 +326,7 @@ function parseDate(raw){
   if(d!==undefined){const dt=new Date(y,m-1,d);if(dt.getMonth()!==m-1||dt.getDate()!==d)return{ok:false,why:'That day doesn\'t exist in that month.'};}
   return{ok:true,value:(ap?'~':'')+y+(m?'-'+String(m).padStart(2,'0'):'')+(d?'-'+String(d).padStart(2,'0'):'')};
 }
-/* live "read as" line under a date box, so people see how their date was understood */
-function datePreview(input){
-  const out=h('span',{class:'hint'});
-  const upd=()=>{const v=input.value.trim();if(!v){out.textContent='';out.style.color='';return;}const r=parseDate(v);
-    if(r.ok){out.textContent='✓ Read as '+dateToInput(r.value);out.style.color='var(--alive)';}
-    else{out.textContent=r.why||'Not understood. Try 1952, Mar 1952 or 14 Mar 1952.';out.style.color='var(--danger)';}};
-  input.addEventListener('input',upd);upd();return out;
-}
-function dateToInput(v){if(!v)return'';const ap=v[0]==='~';const [y,m,d]=(ap?v.slice(1):v).split('-');return(ap?'c. ':'')+(d?`${+d} ${MON[+m-1]} ${y}`:m?`${MON[+m-1]} ${y}`:y);}
-const validDate=v=>typeof v==='string'&&/^~?\d{4}(-\d{2}(-\d{2})?)?$/.test(v);
+const validDate=v=>typeof v==='string'&&!!dparts(v);
 function isAncestorOf(x,y){const st=[...P(y).parents],seen=new Set();while(st.length){const c=st.pop();if(c===x)return true;if(seen.has(c)||!P(c))continue;seen.add(c);st.push(...P(c).parents);}return false;}
 function createPerson(f){
   const id=rid('p');
@@ -302,7 +361,7 @@ const sharedKids=(a,b)=>childrenOf(a).filter(c=>P(c).parents.includes(b));
 const isConnected=id=>{const p=P(id);return p.parents.length>0||childrenOf(id).length>0||p.partners.length>0;};
 function purge(id){delete DATA.people[id];delete PRIV[id];for(const q of Object.values(DATA.people)){q.parents=q.parents.filter(x=>x!==id);q.partners=q.partners.filter(x=>x!==id);q.ex=(q.ex||[]).filter(x=>x!==id);}if(DATA.home===id)DATA.home=null;}
 function linkPartners(a,b){if(a===b)return;if(!P(a).partners.includes(b))P(a).partners.push(b);if(!P(b).partners.includes(a))P(b).partners.push(a);}
-function applyRel(a,type,b,warn){
+function applyRel(a,type,b,warn,via){
   if(!P(a)||!P(b)||a===b)return;
   if(type==='child')addParent(a,b,warn);
   else if(type==='parent')addParent(b,a,warn);
@@ -313,6 +372,20 @@ function applyRel(a,type,b,warn){
     if(pb.length)pb.forEach(x=>addParent(a,x,warn));
     else if(P(a).parents.length){P(a).parents.forEach(x=>addParent(b,x,warn));}
     else{const ph=createPerson({placeholder:true,surname:P(b).surname});addParent(b,ph,warn);addParent(a,ph,warn);}
+  }
+  else if(isCousin(type)){
+    // a cousin is the child of one of b's aunts/uncles; if that aunt/uncle isn't known, an "Unknown parent" stands in for them
+    let u=via&&via.startsWith('p:')&&P(via.slice(2))?via.slice(2):null;
+    if(!u){
+      let q=via&&via.startsWith('q:')&&P(via.slice(2))?via.slice(2):null;
+      if(!q&&via&&via.startsWith('side:')){const sx=via.slice(5);q=P(b).parents.find(x=>P(x)&&P(x).sex===sx)||null;
+        if(!q){if(P(b).parents.filter(P).length>=2){warn.push(`Couldn't place ${name(P(a))} as ${name(P(b))}'s cousin on that side. Link them under the right aunt or uncle with Edit.`);return;}
+          q=createPerson({placeholder:true,sex:sx,surname:sx==='M'?P(b).surname:''});addParent(b,q,warn);}}
+      if(!q){if(P(b).parents.filter(P).length>=2){warn.push(`Couldn't tell which side ${name(P(a))} is ${name(P(b))}'s cousin on. Link them under the right aunt or uncle with Edit.`);return;}
+        q=createPerson({placeholder:true,surname:P(b).surname});addParent(b,q,warn);}
+      u=createPerson({placeholder:true,surname:P(q).surname});rebuildIndex();applyRel(u,'sibling',q,warn);
+    }
+    addParent(a,u,warn);
   }
 }
 function findDups(f,exclude){
@@ -424,7 +497,7 @@ async function ghFetchLatest(){
 function merge3(base,ours,theirs){
   const out=clone(theirs),notes=[];const same=(a,b)=>canon(a)===canon(b);
   const nm=p=>p?fullName(p):'someone';
-  for(const k of ['title','home','custodians','vault','github']){
+  for(const k of ['title','home','custodians','vault','github','relay']){
     if(same(ours[k],base[k]))continue;
     if(same(theirs[k],base[k])||same(theirs[k],ours[k]))out[k]=clone(ours[k]);
     else notes.push(`Setting "${k}": another custodian also changed it, so their version was kept.`);
@@ -482,39 +555,43 @@ function askToken(){
     if(!getTok())setTimeout(()=>inp.focus(),50);
   });
 }
-async function publish(){
-  if(!ghConf())return saveJson();
-  if(!getTok()&&!await askToken())return;
-  const by=(()=>{try{return localStorage.getItem('ft-by')||'';}catch(e){return'';}})();
+async function publish(opts={}){
+  if(!pubKind()){saveJson();return false;}
+  if(pubKind()==='relay'&&!getPass()&&!await askPassword())return false;
+  if(pubKind()==='github'&&!getTok()&&!await askToken())return false;
+  const kind=pubKind();
+  const by=RELAY_WHO||(()=>{try{return localStorage.getItem('ft-by')||'';}catch(e){return'';}})();
   const pb=$('#publish-btn');if(pb){pb.disabled=true;pb.textContent='Publishing…';}
   try{
     for(let attempt=0;attempt<4;attempt++){
-      const latest=await ghFetchLatest();
+      const latest=await latestFrom(kind);
       let next=DATA,notes=[];
-      if(latest.sha&&(!BASE)||latest.sha&&BASE&&(canon(latest.data.people)!==canon(BASE.people)||canon(Object.assign({},latest.data,{people:0,updated:0}))!==canon(Object.assign({},BASE,{people:0,updated:0})))){
+      if(latest.sha&&(!BASE||canon(latest.data.people)!==canon(BASE.people)||canon(Object.assign({},latest.data,{people:0,updated:0}))!==canon(Object.assign({},BASE,{people:0,updated:0})))){
         ({out:next,notes}=merge3(BASE||emptyData(),DATA,latest.data));
       }
       next.updated=new Date().toISOString();
-      const c=ghConf();
-      const r=await gh('PUT',`/repos/${c.owner}/${c.repo}/contents/${c.path}`,{message:`Family tree update${by?' by '+by:''}`,content:utf8b64(JSON.stringify(next,null,1)),branch:c.branch,...(latest.sha?{sha:latest.sha}:{})});
-      if(r.status===409||r.status===422)continue; // someone published between our read and write: re-read and merge again
-      if(r.status===401){setTok('');throw new Error(ghError(r));}
-      if(!r.ok)throw new Error(ghError(r));
+      const res=await putTo(kind,JSON.stringify(next,null,1),latest.sha,`Family tree update${by?' by '+by:''}`);
+      if(res==='conflict')continue; // someone published between our read and write: re-read and merge again
       DATA=next;BASE=clone(next);rebuildIndex();dirty=false;loadedStamp=DATA.updated;
       try{localStorage.removeItem(DRAFT_KEY);}catch(e){}
       updateStatus();setFocus(P(S.focus)?S.focus:pickHome());
       if(notes.length){const m=modal('Published, with notes',{wide:true});m.set([h('p',{text:'Another custodian published changes while you were working. Both sets of changes were combined, except:'}),h('div',{class:'warn'},notes.map(n=>h('div',{text:n})))],[btn('OK',()=>m.close(),'primary')]);}
-      else toast('Published. Everyone sees it within a few minutes.',5000);
-      return;
+      else if(!opts.quiet)toast('Published. Everyone sees it within a few minutes.',5000);
+      return true;
     }
-    throw new Error('The tree kept changing on GitHub while publishing. Try again.');
-  }catch(e){const m=modal("Couldn't publish");m.set(h('p',{text:e.message+' Your changes are still saved on this device.'}),[btn('OK',()=>m.close(),'primary')]);}
+    throw new Error('The tree kept changing while publishing. Try again.');
+  }catch(e){
+    const msg=e instanceof TypeError?(kind==='relay'?RELAY_DOWN:"Can't reach GitHub right now."):e.message;
+    const m=modal("Couldn't publish");m.set(h('p',{text:msg+' Your changes are still saved on this device.'}),[btn('OK',()=>m.close(),'primary')]);
+    updateStatus();return false;
+  }
   finally{const pb=$('#publish-btn');if(pb){pb.disabled=false;pb.textContent='Publish';}}
 }
-async function refreshFromGitHub(){
-  if(!ghConf()||!getTok()||dirty)return;
-  try{const latest=await ghFetchLatest();
-    if(!dirty&&canon(latest.data)!==canon(BASE)){DATA=latest.data;BASE=clone(DATA);rebuildIndex();loadedStamp=DATA.updated;setFocus(P(S.focus)?S.focus:pickHome());toast('Loaded the latest version from GitHub.');}
+async function refreshLatest(){
+  const k=pubKind();if(!k||dirty)return;
+  if(k==='relay'&&!getPass())return;if(k==='github'&&!getTok())return;
+  try{const latest=await latestFrom(k);
+    if(!dirty&&canon(latest.data)!==canon(BASE)){DATA=latest.data;BASE=clone(DATA);rebuildIndex();loadedStamp=DATA.updated;setFocus(P(S.focus)?S.focus:pickHome());toast('Loaded the latest version of the tree.');}
   }catch(e){}
 }
 
@@ -555,6 +632,140 @@ function missingParentBox(id){
   return box;
 }
 
+/* ---------- relay: relatives' additions go to a private queue; custodians sign in with a password (no GitHub needed) ---------- */
+const PASS_KEY='ft-relay-pass:'+location.host+PAGE_PATH;
+const getPass=()=>{try{return localStorage.getItem(PASS_KEY)||'';}catch(e){return'';}};
+const setPass=v=>{try{v?localStorage.setItem(PASS_KEY,v):localStorage.removeItem(PASS_KEY);}catch(e){}};
+const relayURL=()=>String(DATA&&DATA.relay||'').trim().replace(/\/+$/,'');
+const relayOn=()=>/^https?:\/\/[^\s]+$/.test(relayURL());
+const viaRelay=()=>relayOn()&&S.pubMode!=='github';
+let RELAY_WHO='';
+async function relayFetch(path,{method='GET',body,auth=true}={}){
+  return fetch(relayURL()+path,{method,cache:'no-store',
+    headers:Object.assign({},body!==undefined?{'Content-Type':'application/json'}:{},auth?{Authorization:'Bearer '+getPass()}:{}),
+    body:body!==undefined?JSON.stringify(body):undefined});
+}
+async function relayErr(r){try{const j=await r.json();return j.error||('The relay answered '+r.status+'.');}catch(e){return'The relay answered '+r.status+'.';}}
+const RELAY_DOWN="Can't reach the family tree's relay right now. Check your internet connection and try again.";
+/* true = signed in, false = password refused, null = relay unreachable */
+async function relayWhoami(){
+  if(!getPass())return false;
+  try{const r=await relayFetch('/whoami');
+    if(r.ok){RELAY_WHO=(await r.json()).name||'';return true;}
+    if(r.status===401){setPass('');return false;}
+    return null;
+  }catch(e){return null;}
+}
+function askPassword(){
+  return new Promise(res=>{
+    const fid='passform'+Date.now();
+    const user=h('input',{type:'text',name:'username',autocomplete:'username',value:'Family tree custodian',readonly:true,style:'color:var(--muted)'});
+    const inp=h('input',{type:'password',name:'password',autocomplete:'current-password'});
+    const err=h('div',{class:'err',hidden:true});
+    let done=false;const finish=v=>{if(!done){done=true;res(v);}};
+    const m=modal('Custodian sign-in',{onclose:()=>finish(!!RELAY_WHO&&!!getPass())});
+    const form=h('form',{id:fid,action:'#',onsubmit:async e=>{
+      e.preventDefault();const pw=inp.value;if(!pw){inp.focus();return;}
+      err.hidden=true;setPass(pw);
+      try{const r=await relayFetch('/whoami');
+        if(r.ok){RELAY_WHO=(await r.json()).name||'';m.close();toast('Signed in as '+(RELAY_WHO||'custodian')+'.');return;}
+        setPass('');err.textContent=r.status===401?'That password was not accepted.':await relayErr(r);err.hidden=false;
+      }catch(x){setPass('');err.textContent=RELAY_DOWN;err.hidden=false;}
+    }},
+      h('label',{class:'field',hidden:true},user),
+      h('label',{class:'field'},h('span',{class:'lbl',text:'Your custodian password'}),inp,
+        h('span',{class:'hint',text:'Each custodian has their own password from the family\'s steward. If your browser or password manager offers to save it, say yes.'})),err);
+    const alt=ghConf()?btn('Use a GitHub token instead',()=>{S.pubMode='github';done=true;m.close();res(true);}):null;
+    m.set([form,ghConf()?h('p',{class:'hint',text:'If the relay is down, a custodian with a GitHub token can still publish.'}):null],
+      [alt,btn('Cancel',()=>m.close()),h('button',{type:'submit',form:fid,class:'btn primary',text:'Sign in'})]);
+    setTimeout(()=>inp.focus(),50);
+  });
+}
+/* ---- relatives: send additions to the queue ---- */
+async function relaySubmit(sub){
+  try{const r=await relayFetch('/submit',{method:'POST',body:sub,auth:false});return r.ok?{ok:true}:{ok:false,err:await relayErr(r)};}
+  catch(e){return{ok:false,err:RELAY_DOWN};}
+}
+/* ---- custodians: the queue ---- */
+S.pending=null;
+async function loadPending(){
+  const items=[];let cursor=null,guard=0;
+  do{const r=await relayFetch('/pending'+(cursor?'?cursor='+encodeURIComponent(cursor):''));
+    if(r.status===401){setPass('');RELAY_WHO='';throw new Error('Your custodian password was not accepted. Sign in again.');}
+    if(!r.ok)throw new Error(await relayErr(r));
+    const j=await r.json();items.push(...(j.items||[]));cursor=j.cursor;
+  }while(cursor&&++guard<50);
+  const clean=items.filter(s=>s&&Array.isArray(s.people)&&typeof s.sid==='string').map(s=>Object.assign(s,{people:s.people.filter(p=>p&&/^n\d+$/.test(p.tmp))}));
+  clean.sort((a,b)=>String(a.receivedAt||'').localeCompare(String(b.receivedAt||'')));
+  S.pending=clean;updatePendingBtn();return clean;
+}
+function updatePendingBtn(){
+  const b=$('#pending-btn');if(!b)return;
+  b.hidden=!(custodian&&viaRelay());
+  const n=S.pending?S.pending.filter(s=>!DATA.imported.includes(s.sid)).length:null;
+  b.textContent=n===null?'Pending':`Pending (${n})`;b.classList.toggle('primary',!!n);
+}
+async function refreshPending(){try{await loadPending();}catch(e){}}
+async function openPending(){
+  if(!getPass()&&!await askPassword())return;
+  const m=modal('Pending additions',{wide:true,sticky:true});
+  m.set(h('p',{class:'muted',text:'Loading…'}),[btn('Close',()=>m.close())]);
+  let items;
+  try{items=await loadPending();}catch(e){m.set(h('p',{class:'err',text:e instanceof TypeError?RELAY_DOWN:e.message}),[btn('Close',()=>m.close())]);return;}
+  const render=()=>{
+    S.pending=items;updatePendingBtn();
+    if(!items.length){m.set(h('p',{text:'Nothing is waiting for approval.'}),[btn('Close',()=>m.close(),'primary')]);return;}
+    const blocks=items.map(s=>{
+      const choices={},done=DATA.imported.includes(s.sid);
+      const acts=done?[h('span',{class:'muted',text:'Already in the tree.'}),btn('Remove from list',()=>drop(s))]
+        :[btn('Reject',()=>reject(s),'danger'),btn('Approve',e=>approve(s,choices,e.target),'primary')];
+      return h('div',{class:'pend'},subReview(s,choices),h('div',{class:'pend-actions'},acts));
+    });
+    m.set([h('p',{class:'muted',text:'For each one, check who it is and, if someone may already be in the tree, choose what to do. Approve adds them and publishes the tree; Reject deletes the submission.'}),...blocks],[btn('Close',()=>m.close())]);
+  };
+  const drop=async s=>{try{const r=await relayFetch('/pending/'+encodeURIComponent(s.sid),{method:'DELETE'});if(!r.ok){toast(await relayErr(r));return;}}catch(e){toast(RELAY_DOWN);return;}items=items.filter(x=>x!==s);render();};
+  const reject=async s=>{if(!await confirmBox(`Reject the addition from ${s.by||'someone'}? It will be deleted and nothing is added to the tree.`,'Reject',true))return;drop(s);};
+  const approve=async(s,choices,b)=>{
+    if(b){b.disabled=true;b.textContent='Approving…';}
+    const res=await applySubs([s],choices);
+    if(!res){if(b){b.disabled=false;b.textContent='Approve';}return;}
+    const ok=await publish({quiet:true});
+    if(ok){try{await relayFetch('/pending/'+encodeURIComponent(s.sid),{method:'DELETE'});}catch(e){}items=items.filter(x=>x!==s);
+      toast(`Approved: ${res.added} ${res.added===1?'person':'people'} added and published.`,5000);}
+    else toast('Added on this device but not published yet, so it stays in the list. Tap Publish once the problem is fixed.',7000);
+    render();
+    if(res.warns.length){const w=modal('Approved, with notes',{wide:true});w.set(h('div',{class:'warn'},res.warns.map(x=>h('div',{text:x}))),[btn('OK',()=>w.close(),'primary')]);}
+  };
+  render();
+}
+/* ---- publishing through the relay or straight to GitHub ---- */
+function pubKind(){if(viaRelay())return'relay';if(ghConf())return'github';return null;}
+async function latestFrom(kind){
+  if(kind==='relay'){
+    const r=await relayFetch('/file');
+    if(r.status===401){setPass('');RELAY_WHO='';throw new Error('Your custodian password was not accepted. Sign in again.');}
+    if(!r.ok)throw new Error(await relayErr(r));
+    const j=await r.json(),text=typeof j.text==='string'?j.text:(j.base64?b64utf8(j.base64):null);
+    return{sha:j.sha||null,data:text?normalize(JSON.parse(text)):emptyData()};
+  }
+  return ghFetchLatest();
+}
+async function putTo(kind,text,sha,msg){
+  if(kind==='relay'){
+    const r=await relayFetch('/file',{method:'POST',body:{base64:utf8b64(text),sha}});
+    if(r.status===409)return'conflict';
+    if(r.status===401){setPass('');RELAY_WHO='';throw new Error('Your custodian password was not accepted. Sign in again.');}
+    if(!r.ok)throw new Error(await relayErr(r));
+    return'ok';
+  }
+  const c=ghConf();
+  const r=await gh('PUT',`/repos/${c.owner}/${c.repo}/contents/${c.path}`,{message:msg,content:utf8b64(text),branch:c.branch,...(sha?{sha}:{})});
+  if(r.status===409||r.status===422)return'conflict';
+  if(r.status===401){setTok('');throw new Error(ghError(r));}
+  if(!r.ok)throw new Error(ghError(r));
+  return'ok';
+}
+
 /* ---------- encoding for submission codes ---------- */
 function b64e(str){const b=new TextEncoder().encode(str);let s='';for(const x of b)s+=String.fromCharCode(x);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
 function b64d(t){t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';const s=atob(t);const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return new TextDecoder().decode(b);}
@@ -592,21 +803,21 @@ function shell(){
     h('header',{class:'top'},
       h('h1',{id:'title',text:DATA.title}),
       h('div',{class:'search'},sInp,sList),
-      h('div',{class:'top-actions'},btn('+ Add someone',()=>openAddFlow(S.focus),'primary'),h('button',{type:'button',class:'btn',id:'cust-btn',text:'Custodian',onclick:toggleCustodian}))),
+      h('div',{class:'top-actions'},h('button',{type:'button',class:'btn',id:'view-btn',text:'Whole family',onclick:()=>S.view==='all'?openFocus(S.focus):openAll()}),btn('+ Add someone',()=>openAddFlow(S.focus),'primary'),h('button',{type:'button',class:'btn',id:'cust-btn',text:'Custodian',onclick:toggleCustodian}))),
     h('div',{class:'cust-bar',id:'cust-bar',hidden:true},
-      btn('Add person',()=>openEditPerson(null)),btn('Import submissions',openImport),btn('Settings',openSettings),
-      ghConf()?h('button',{type:'button',class:'btn primary',id:'publish-btn',text:'Publish',onclick:publish}):null,
-      btn(ghConf()?'Download backup':'Save family.json',saveJson,ghConf()?'':'primary'),btn('Export GEDCOM',exportGedcom),btn('Offline copy',saveOffline),
+      btn('Add person',()=>openEditPerson(null)),h('button',{type:'button',class:'btn',id:'pending-btn',hidden:true,text:'Pending',onclick:openPending}),btn('Import submissions',openImport),btn('Settings',openSettings),
+      h('button',{type:'button',class:'btn primary',id:'publish-btn',hidden:true,text:'Publish',onclick:()=>publish()}),
+      h('button',{type:'button',class:'btn',id:'save-btn',text:'Save family.json',onclick:saveJson}),btn('Export GEDCOM',exportGedcom),btn('Offline copy',saveOffline),
       h('span',{class:'status',id:'status'})),
     h('div',{class:'banner',id:'banner',hidden:true}),
     h('div',{class:'body'},
       h('div',{class:'tree-area'},
       h('main',{class:'tree-wrap',id:'wrap'},h('div',{id:'canvas',class:'canvas'})),
-      h('div',{class:'legend',},'Tap a person to center',h('span',{class:'dot st-living'}),'living',h('span',{class:'dot st-deceased'}),'deceased',h('span',{class:'dot'}),'not known'),
+      h('div',{class:'legend',},h('span',{id:'legend-hint',text:'Tap a person to center'}),h('span',{class:'dot st-living'}),'living',h('span',{class:'dot st-deceased'}),'deceased',h('span',{class:'dot'}),'not known',h('span',{class:'cnt'},peopleIcon(),'n'),'direct relatives (dark: some not shown)'),
       h('div',{class:'zoom'},
         h('button',{type:'button','aria-label':'Zoom in',text:'+',onclick:()=>setZoom(S.zoom*1.2)}),
         h('button',{type:'button','aria-label':'Zoom out',text:'−',onclick:()=>setZoom(S.zoom/1.2)}),
-        h('button',{type:'button','aria-label':'Center',title:'Center',text:'◎',onclick:()=>centerOn(S.focus,true)})),
+        h('button',{type:'button','aria-label':'Center',title:'Center',text:'◎',onclick:()=>{if(S.view==='all'){S.allFit=false;renderAll();}else centerOn(S.focus,true);}})),
       h('button',{type:'button',class:'btn show-side',id:'show-side',hidden:true,text:'◂ Details',onclick:()=>setSideOpen(true)})),
       h('aside',{class:'side collapsed',id:'side'})),
     h('div',{id:'modal-root'}),
@@ -653,12 +864,15 @@ function picker(poolFn,initial){
 /* ---------- tree layout ---------- */
 function setFocus(id){
   if(!P(id))return;
+  if(S.view==='all'){S.focus=id;S.allSel=id;renderAll();renderSide();centerOn(id,true);return;}
   S.focus=id;S.up=new Set();S.down=new Set([id]);
   for(const q of P(id).parents)S.up.add(q); // show grandparents by default
+  for(const q of partnersOf(id))if(!isEx(id,q))S.up.add(q); // and the spouse's parents
   if(location.hash.slice(1)!==id){try{location.hash=id;}catch(e){}}
   renderTree();renderSide();
 }
 function renderTree(keepKey){
+  if(S.view==='all')return renderAll();
   const wrap=$('#wrap'),canvas=$('#canvas');
   let anchor=null;
   if(keepKey){const el=canvas.querySelector(`[data-key="${keepKey}"]`);if(el){const r=el.getBoundingClientRect();anchor={x:r.left,y:r.top};}}
@@ -694,7 +908,7 @@ function renderTree(keepKey){
     if(n.kids.length){
       let kl=left+(n.w-n.kw)/2;const midY=y+H+GY/2,cs=[];
       n.kids.forEach(k=>{pDown(k,kl,row+1);cs.push(k.cx);kl+=k.w+GX;});
-      L(ax,y+H,ax,midY);
+      L(ax,n.unit.length>1?y+H/2:y+H,ax,midY);
       L(Math.min(ax,...cs),midY,Math.max(ax,...cs),midY);
       cs.forEach(c=>L(c,midY,c,(row+1)*(H+GY)));
     }
@@ -715,12 +929,15 @@ function renderTree(keepKey){
       const rt=n.id===out.skipRoot;
       L(n.cx,top,n.cx,midY,out.lines,rt?'stub':null);
       L(Math.min(n.cx,...cs),midY,Math.max(n.cx,...cs),midY,out.lines,rt?'hz':null);
-      cs.forEach(c=>L(c,midY,c,(row-1)*(H+GY)+H,out.lines));
+      cs.forEach(c=>L(c,midY,c,(row-1)*(H+GY)+H,out.lines,rt?'rootup':null));
     }
   }
 
   if(fParents.length){
-    const kids=sortByBirth([...new Set(fParents.flatMap(childrenOf))]);
+    // when the spouse's parents are shown, keep the centered person rightmost among siblings so the two families' lines never cross
+    const inlaw=partnersOf(S.focus).some(q=>S.up.has(q)&&P(q).parents.some(P));
+    let kids=sortByBirth([...new Set(fParents.flatMap(childrenOf))]);
+    if(inlaw)kids=kids.filter(k=>k!==S.focus).concat([S.focus]);
     const root=mDown(fParents[0],new Set(),fParents,kids);
     pDown(root,0,-1);
     // ancestors of each parent, pushed outward so the two sides never overlap
@@ -746,6 +963,25 @@ function renderTree(keepKey){
   }else{
     pDown(mDown(S.focus,new Set()),0,0);
   }
+  // ---- in-laws: parents of the centered person's spouse(s), above the spouse and clear of everything else
+  let lane=0;
+  for(const q of partnersOf(S.focus)){
+    const qn=nodes.find(n=>n.key===`d0:${q}`);if(!qn)continue;
+    const np=P(q).parents.filter(P).length;if(!np)continue;
+    qn.up=np;if(!S.up.has(q))continue;
+    const t=mUp(q,new Set([S.focus])),out={nodes:[],lines:[],skipRoot:q};pUp(t,0,0,out);
+    const qcx=qn.x+W/2;let dx=qcx-t.cx;
+    const rowMax={};nodes.forEach(n=>{rowMax[n.y]=Math.max(rowMax[n.y]===undefined?-Infinity:rowMax[n.y],n.x+W);});
+    let need=0;out.nodes.forEach(n=>{const m=rowMax[n.y];if(m!==undefined)need=Math.max(need,m+GX-(n.x+dx));});
+    dx+=need;const busY=-GY/2+lane*8;lane++;
+    out.nodes.forEach(n=>{n.x+=dx;nodes.push(n);});
+    out.lines.forEach(l=>{
+      if(l.tag==='stub')L(qcx,0,qcx,busY);
+      else if(l.tag==='hz')L(Math.min(l.x1+dx,qcx),busY,Math.max(l.x2+dx,qcx),busY);
+      else if(l.tag==='rootup')L(l.x1+dx,busY,l.x2+dx,l.y2);
+      else L(l.x1+dx,l.y1,l.x2+dx,l.y2);
+    });
+  }
 
   let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
   nodes.forEach(n=>{minX=Math.min(minX,n.x);minY=Math.min(minY,n.y);maxX=Math.max(maxX,n.x+W);maxY=Math.max(maxY,n.y+H);});
@@ -757,21 +993,22 @@ function renderTree(keepKey){
   lines.forEach(l=>{const e=document.createElementNS(NS,'line');e.setAttribute('x1',l.x1+ox);e.setAttribute('y1',l.y1+oy);e.setAttribute('x2',l.x2+ox);e.setAttribute('y2',l.y2+oy);if(l.cls)e.setAttribute('class',l.cls);svg.append(e);});
   stage.append(svg);
   const seen=new Set();
-  nodes.forEach(n=>{if(seen.has(n.key))return;seen.add(n.key);stage.append(card(n,n.x+ox,n.y+oy));});
+  const vis=new Set(nodes.map(n=>n.id));
+  nodes.forEach(n=>{if(seen.has(n.key))return;seen.add(n.key);stage.append(card(n,n.x+ox,n.y+oy,vis));});
   canvas.append(stage);
   canvas._size=[cw,ch];
   applyZoom();
   if(anchor){const el=canvas.querySelector(`[data-key="${keepKey}"]`);if(el){const r=el.getBoundingClientRect();wrap.scrollLeft+=r.left-anchor.x;wrap.scrollTop+=r.top-anchor.y;}}
   else centerOn(S.focus);
 }
-function card(n,x,y){
+function card(n,x,y,vis){
   const p=P(n.id);
   const isF=n.id===S.focus;
   const el=h('div',{class:`card st-${stat(p)}${p.placeholder?' ph':''}${p.commonName?' has-cn':''}${isF?' focus':''}`,style:`left:${x}px;top:${y}px;width:${W}px;height:${H}px`,
     'data-key':n.key,'data-id':n.id,tabindex:0,role:'button','aria-label':fullName(p)+' '+lifespan(p),
     onclick:()=>{if(isF)openSideFull();else setFocus(n.id);},
     onkeydown:e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click();}}},
-    h('div',{class:'nm',text:dname(p)}),h('div',{class:'yr',text:[p.commonName?name(p):'',lifespan(p)].filter(Boolean).join(' · ')||' '}));
+    h('div',{class:'nm',text:dname(p)}),h('div',{class:'yr',text:[p.commonName?name(p):'',lifespan(p)].filter(Boolean).join(' · ')||' '}),relBadge(n.id,vis||null));
   if(n.down){const open=S.down.has(n.id);el.append(h('button',{type:'button',class:'tg tg-down',title:open?'Hide children':'Show children',text:open?'–':'+'+n.down,onclick:e=>{e.stopPropagation();open?S.down.delete(n.id):S.down.add(n.id);renderTree(n.key);}}));}
   if(n.up){const open=S.up.has(n.id);el.append(h('button',{type:'button',class:'tg tg-up',title:open?'Hide parents':'Show parents',text:open?'–':'▲',onclick:e=>{e.stopPropagation();open?S.up.delete(n.id):S.up.add(n.id);renderTree(n.key);}}));}
   return el;
@@ -783,9 +1020,10 @@ function emptyState(){
 function applyZoom(){
   const c=$('#canvas');if(!c||!c._size)return;const st=c.firstChild;if(!st||!st.classList||!st.classList.contains('stage'))return;
   c.style.width=c._size[0]*S.zoom+'px';c.style.height=c._size[1]*S.zoom+'px';st.style.transform=`scale(${S.zoom})`;
+  const w=$('#wrap');c.style.margin=S.view==='all'&&w?`${Math.max(0,(w.clientHeight-c._size[1]*S.zoom)/2)}px auto 0`:'';
 }
 function setZoom(z){
-  const w=$('#wrap'),old=S.zoom;z=Math.min(1.8,Math.max(.35,z));
+  const w=$('#wrap'),old=S.zoom;z=Math.min(1.8,Math.max(.15,z));
   const cx=(w.scrollLeft+w.clientWidth/2)/old,cy=(w.scrollTop+w.clientHeight/2)/old;
   S.zoom=z;applyZoom();w.scrollLeft=cx*z-w.clientWidth/2;w.scrollTop=cy*z-w.clientHeight/2;
 }
@@ -799,6 +1037,142 @@ function dragPan(w){
   w.addEventListener('mousedown',e=>{if(e.button!==0||e.target.closest('.card,button'))return;st={x:e.clientX,y:e.clientY,l:w.scrollLeft,t:w.scrollTop};w.classList.add('dragging');e.preventDefault();});
   window.addEventListener('mousemove',e=>{if(!st)return;w.scrollLeft=st.l-(e.clientX-st.x);w.scrollTop=st.t-(e.clientY-st.y);});
   window.addEventListener('mouseup',()=>{st=null;w.classList.remove('dragging');});
+}
+
+/* ---------- direct-relative count badge on each card ---------- */
+function peopleIcon(){
+  const NS='http://www.w3.org/2000/svg',s=document.createElementNS(NS,'svg');s.setAttribute('viewBox','0 0 16 16');s.setAttribute('aria-hidden','true');
+  const p=document.createElementNS(NS,'path');p.setAttribute('fill','currentColor');
+  p.setAttribute('d','M5.5 7.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.5 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM1 13.2C1 10.9 3 9 5.5 9S10 10.9 10 13.2V14H1v-.8Zm9.9.8v-.8c0-1.3-.5-2.5-1.3-3.4.5-.2 1-.3 1.4-.3 2.2 0 4 1.6 4 3.7v.8h-4.1Z');
+  s.append(p);return s;
+}
+function relCount(id){const p=P(id),ps=p.parents.filter(P),sp=partnersOf(id),ch=childrenOf(id);return{ids:[...new Set([...ps,...sp,...ch])],ps:ps.length,sp:sp.length,ch:ch.length};}
+/* vis: the set of people drawn on screen right now (focused view); null when everyone is drawn */
+function relBadge(id,vis){
+  const r=relCount(id);if(!r.ids.length)return null;
+  const hidden=vis?r.ids.filter(x=>!vis.has(x)).length:0,pl=(n,a,b)=>`${n} ${n>1?b:a}`;
+  const parts=[r.ps&&pl(r.ps,'parent','parents'),r.sp&&pl(r.sp,'spouse','spouses'),r.ch&&pl(r.ch,'child','children')].filter(Boolean).join(', ');
+  const t=`${pl(r.ids.length,'direct relative','direct relatives')}: ${parts}`+(hidden?`. ${hidden} not shown here; tap to see them.`:'');
+  const el=h('span',{class:'cnt'+(hidden?' more':''),title:t,'aria-label':t});
+  el.append(peopleIcon(),document.createTextNode(String(r.ids.length)));
+  return el;
+}
+
+/* ---------- whole-family view: everyone at once, one row per generation ---------- */
+const LANE=8;
+function updateViewBtn(){
+  const b=$('#view-btn');if(b)b.textContent=S.view==='all'?'Focused view':'Whole family';
+  const lg=$('#legend-hint');if(lg)lg.textContent=S.view==='all'?'Tap a person to highlight their family':'Tap a person to center';
+}
+function openAll(){S.view='all';S.allFit=false;S.allSel=null;updateViewBtn();if(location.hash!=='#all'){try{location.hash='all';}catch(e){}}renderAll();renderSide();}
+function openFocus(id){S.view='focus';updateViewBtn();setFocus(id&&P(id)?id:(P(S.focus)?S.focus:pickHome()));}
+function selectAll(id,scroll){S.allSel=(!scroll&&S.allSel===id)?null:id;S.focus=id;renderAll();renderSide();if(scroll)centerOn(id,true);}
+function layoutFamily(ids){
+  const inC=new Set(ids),R={};
+  const par=i=>P(i).parents.filter(x=>inC.has(x)),kidsOf=i=>childrenOf(i).filter(x=>inC.has(x)),prt=i=>partnersOf(i).filter(x=>inC.has(x));
+  // generations: children below parents, spouses on the same row, people with no recorded parents just above their children
+  ids.forEach(i=>R[i]=0);
+  for(let it=0;it<80;it++){let ch=false;
+    for(const i of ids)for(const q of par(i))if(R[i]<R[q]+1){R[i]=R[q]+1;ch=true;}
+    for(const i of ids)for(const q of prt(i))if(R[i]<R[q]){R[i]=R[q];ch=true;}
+    for(const i of ids){if(par(i).length)continue;const k=kidsOf(i);if(!k.length)continue;const t=Math.min(...k.map(x=>R[x]))-1;if(t>R[i]){R[i]=t;ch=true;}}
+    if(!ch)break;}
+  const r0=Math.min(...ids.map(i=>R[i]));ids.forEach(i=>R[i]-=r0);
+  const maxR=Math.max(...ids.map(i=>R[i]));
+  // units: spouses on the same row stay side by side
+  const unitOf={},units=[];
+  for(const i of ids){if(unitOf[i]!==undefined)continue;const mem=[i];unitOf[i]=units.length;
+    for(let k=0;k<mem.length;k++)for(const y of prt(mem[k]))if(unitOf[y]===undefined&&R[y]===R[i]){unitOf[y]=units.length;mem.push(y);}
+    units.push({m:mem,r:R[i]});}
+  units.forEach(u=>{if(u.m.length>2){const hub=u.m.reduce((a,b)=>prt(b).length>prt(a).length?b:a);const rest=u.m.filter(x=>x!==hub).sort((a,b)=>isEx(hub,b)-isEx(hub,a));const l=rest.slice(0,Math.floor(rest.length/2));u.m=[...l,hub,...rest.slice(l.length)];}});
+  // order within each row: start from a walk down the families, then reduce crossings
+  const rows=Array.from({length:maxR+1},()=>[]),placed=new Set();
+  const visit=u=>{if(placed.has(u))return;placed.add(u);rows[units[u].r].push(u);
+    for(const m of units[u].m)for(const c of sortByBirth(kidsOf(m)))visit(unitOf[c]);
+    for(const m of units[u].m)for(const q of par(m))visit(unitOf[q]);};
+  units.forEach((u,k)=>{if(u.m.every(m=>!par(m).length))visit(k);});
+  units.forEach((u,k)=>visit(k));
+  const pos={},avg=a=>a.reduce((s,x)=>s+x,0)/a.length;
+  const setPos=r=>rows[r].forEach((u,k)=>units[u].m.forEach((m,j)=>pos[m]=k+(j+.5)/units[u].m.length));
+  rows.forEach((_,r)=>setPos(r));
+  const sweep=(r,nb)=>{const bc=new Map();rows[r].forEach((u,k)=>{const ns=units[u].m.flatMap(nb);bc.set(u,ns.length?avg(ns.map(q=>pos[q])):k);});rows[r].sort((a,b)=>bc.get(a)-bc.get(b));setPos(r);};
+  const orient=u=>{const m=units[u].m;if(m.length!==2)return;const b=m.map(x=>{const p=par(x);return p.length?avg(p.map(q=>pos[q])):null;});if(b[0]!==null&&b[1]!==null&&b[0]>b[1])m.reverse();};
+  for(let pass=0;pass<4;pass++){
+    for(let r=1;r<=maxR;r++){rows[r].forEach(orient);sweep(r,par);}
+    for(let r=maxR-1;r>=0;r--)sweep(r,kidsOf);
+  }
+  for(let r=1;r<=maxR;r++){rows[r].forEach(orient);sweep(r,par);}
+  // horizontal positions: children under their parents, parents over their children, no overlaps
+  const uw=u=>units[u].m.length*W+(units[u].m.length-1)*PG,X={};
+  rows.forEach(row=>{let x=0;row.forEach(u=>{X[u]=x;x+=uw(u)+GX;});});
+  const cx=m=>X[unitOf[m]]+units[unitOf[m]].m.indexOf(m)*(W+PG)+W/2;
+  const anchor=ps=>ps.length>1?(cx(ps[0])+cx(ps[1]))/2:cx(ps[0]);
+  const famsOfUnit=u=>{const f=new Map();units[u].m.forEach(x=>kidsOf(x).forEach(k=>{const ps=par(k),key=ps.slice().sort().join('+');if(!f.has(key))f.set(key,{ps,ks:[]});const e=f.get(key);if(!e.ks.includes(k))e.ks.push(k);}));return[...f.values()];};
+  const place=(row,want)=>{const n=row.length,F=[],B=[];
+    for(let i=0;i<n;i++)F[i]=i?Math.max(want[i],F[i-1]+uw(row[i-1])+GX):want[i];
+    for(let i=n-1;i>=0;i--)B[i]=i<n-1?Math.min(want[i],B[i+1]-uw(row[i])-GX):want[i];
+    row.forEach((u,i)=>X[u]=(F[i]+B[i])/2);};
+  for(let it=0;it<24;it++){
+    const down=it%2===0,order=[...rows.keys()];if(!down)order.reverse();
+    for(const r of order){const row=rows[r];if(!row.length)continue;
+      place(row,row.map(u=>{const t=[];
+        if(down)units[u].m.forEach((x,j)=>{const ps=par(x);if(ps.length)t.push(anchor(ps)-j*(W+PG)-W/2);});
+        else famsOfUnit(u).forEach(f=>t.push(avg(f.ks.map(cx))-(anchor(f.ps)-X[u])));
+        return t.length?avg(t):X[u];}));}
+  }
+  const mx=Math.min(...Object.values(X));Object.keys(X).forEach(k=>X[k]-=mx);
+  // family connectors, each in its own lane so neighbouring families' lines don't merge
+  const fams=new Map();ids.forEach(k=>{const ps=par(k);if(!ps.length)return;const key=ps.slice().sort().join('+');if(!fams.has(key))fams.set(key,{ps,ks:[]});fams.get(key).ks.push(k);});
+  const lanes=Array(maxR+1).fill(0),list=[...fams.values()];
+  list.forEach(f=>{f.r=Math.max(...f.ps.map(q=>R[q]));f.ax=anchor(f.ps);const xs=f.ks.map(cx);f.lo=Math.min(f.ax,...xs);f.hi=Math.max(f.ax,...xs);});
+  for(let r=0;r<=maxR;r++){const ends=[];list.filter(f=>f.r===r).sort((a,b)=>a.lo-b.lo).forEach(f=>{let l=ends.findIndex(e=>e+14<f.lo);if(l<0){l=ends.length;ends.push(0);}ends[l]=f.hi;f.lane=l;});lanes[r]=ends.length;}
+  const top=[];let y=0;for(let r=0;r<=maxR;r++){top[r]=y;y+=H+GY+Math.max(0,lanes[r]-1)*LANE;}
+  const nodes=[],lines=[];
+  units.forEach(u=>u.m.forEach((m,j)=>{const x=X[unitOf[m]]+j*(W+PG);nodes.push({id:m,x,y:top[u.r],key:'a:'+m});
+    if(j>0&&prt(m).includes(u.m[j-1]))lines.push({x1:x-PG,y1:top[u.r]+H/2,x2:x,y2:top[u.r]+H/2,cls:isEx(m,u.m[j-1])?'ex':''});}));
+  list.forEach(f=>{const busY=top[f.r]+H+GY/2+f.lane*LANE,u0=unitOf[f.ps[0]];
+    const coupled=f.ps.length>1&&unitOf[f.ps[1]]===u0&&Math.abs(units[u0].m.indexOf(f.ps[0])-units[u0].m.indexOf(f.ps[1]))===1;
+    lines.push({x1:f.ax,y1:top[f.r]+(coupled?H/2:H),x2:f.ax,y2:busY});
+    lines.push({x1:f.lo,y1:busY,x2:f.hi,y2:busY});
+    f.ks.forEach(k=>lines.push({x1:cx(k),y1:busY,x2:cx(k),y2:top[R[k]]}));});
+  return{nodes,lines,w:Math.max(...nodes.map(n=>n.x+W)),h:Math.max(...nodes.map(n=>n.y+H))};
+}
+function renderAll(){
+  const wrap=$('#wrap'),canvas=$('#canvas');canvas.innerHTML='';
+  const ids=Object.keys(DATA.people);
+  if(!ids.length){canvas._size=null;canvas.style.width=canvas.style.height=canvas.style.margin='';canvas.append(emptyState());return;}
+  const linked=ids.filter(isConnected),loners=ids.filter(i=>!isConnected(i));
+  const seen=new Set(),comps=[];
+  for(const i of linked){if(seen.has(i))continue;const c=[],q=[i];seen.add(i);
+    while(q.length){const x=q.pop();c.push(x);for(const y of [...P(x).parents,...childrenOf(x),...partnersOf(x)])if(P(y)&&!seen.has(y)){seen.add(y);q.push(y);}}
+    comps.push(c);}
+  comps.sort((a,b)=>(b.includes(S.focus)-a.includes(S.focus))||b.length-a.length);
+  const nodes=[],lines=[],labels=[];let ox=0,maxH=0;
+  for(const c of comps){const Lf=layoutFamily(c);Lf.nodes.forEach(n=>{n.x+=ox;nodes.push(n);});Lf.lines.forEach(l=>{l.x1+=ox;l.x2+=ox;lines.push(l);});ox+=Lf.w+GX*6;maxH=Math.max(maxH,Lf.h);}
+  if(loners.length){const y=(comps.length?maxH+GY:0)+34;labels.push({x:0,y:y-28,text:`Not linked to anyone yet (${loners.length})${custodian?' · tap one, then Edit to add a relationship':''}`});
+    sortByBirth(loners).forEach((id,i)=>nodes.push({id,x:(i%8)*(W+GX),y:y+Math.floor(i/8)*(H+GX),key:'a:'+id}));}
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  nodes.forEach(n=>{minX=Math.min(minX,n.x);minY=Math.min(minY,n.y);maxX=Math.max(maxX,n.x+W);maxY=Math.max(maxY,n.y+H);});
+  labels.forEach(l=>{minY=Math.min(minY,l.y);});
+  const ox2=PAD-minX,oy=PAD-minY,cw=maxX-minX+2*PAD,ch=maxY-minY+2*PAD;
+  const sel=S.allSel&&P(S.allSel)?S.allSel:null;
+  const rel=new Set(sel?[...P(sel).parents,...partnersOf(sel),...childrenOf(sel)]:[]);
+  const stage=h('div',{class:'stage'+(sel?' has-sel':''),style:`width:${cw}px;height:${ch}px`});
+  const NS='http://www.w3.org/2000/svg',svg=document.createElementNS(NS,'svg');
+  svg.setAttribute('class','lines');svg.setAttribute('width',cw);svg.setAttribute('height',ch);
+  lines.forEach(l=>{const e=document.createElementNS(NS,'line');e.setAttribute('x1',l.x1+ox2);e.setAttribute('y1',l.y1+oy);e.setAttribute('x2',l.x2+ox2);e.setAttribute('y2',l.y2+oy);if(l.cls)e.setAttribute('class',l.cls);svg.append(e);});
+  stage.append(svg);
+  labels.forEach(l=>stage.append(h('div',{class:'grp-label',style:`left:${l.x+ox2}px;top:${l.y+oy}px`,text:l.text})));
+  nodes.forEach(n=>{const p=P(n.id);
+    const el=h('div',{class:`card st-${stat(p)}${p.placeholder?' ph':''}${p.commonName?' has-cn':''}${n.id===sel?' focus':''}${rel.has(n.id)?' hi':''}`,style:`left:${n.x+ox2}px;top:${n.y+oy}px;width:${W}px;height:${H}px`,
+      'data-key':n.key,'data-id':n.id,tabindex:0,role:'button','aria-label':fullName(p)+' '+lifespan(p),
+      onclick:()=>selectAll(n.id,false),onkeydown:e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click();}}},
+      h('div',{class:'nm',text:dname(p)}),h('div',{class:'yr',text:[p.commonName?name(p):'',lifespan(p)].filter(Boolean).join(' · ')||' '}),relBadge(n.id,null));
+    stage.append(el);});
+  canvas.append(stage);canvas._size=[cw,ch];
+  if(!S.allFit){S.allFit=true;S.zoom=Math.min(1,Math.max(.2,Math.min((wrap.clientWidth-24)/cw,(wrap.clientHeight-24)/ch)));applyZoom();
+    wrap.scrollLeft=Math.max(0,(cw*S.zoom-wrap.clientWidth)/2);wrap.scrollTop=0;}
+  else applyZoom();
 }
 
 /* ---------- side panel: the centered person ---------- */
@@ -824,12 +1198,39 @@ function renderSide(){
       h('div',{},h('h3',{text:fullName(p)}),h('div',{class:'muted',text:lifespan(p)})),
       h('button',{type:'button',class:'icon-btn side-toggle','aria-label':'Show details',text:wide()?'Hide ▸':(collapsed?'Details ▴':'Hide ▾'),onclick:()=>{if(wide())setSideOpen(false);else{sd.classList.toggle('collapsed');renderSide();}}})),
     h('div',{class:'side-more'},facts,
-      rel('Parents',sortParents(p.parents.filter(P))),rel('Spouse / partner',partnersOf(id).filter(x=>!isEx(id,x))),rel('Former spouse / partner',partnersOf(id).filter(x=>isEx(id,x))),rel('Siblings',siblingsOf(id)),rel('Children',sortByBirth(childrenOf(id))),
+      rel('Parents',sortParents(p.parents.filter(P))),rel('Spouse / partner',partnersOf(id).filter(x=>!isEx(id,x))),rel('Former spouse / partner',partnersOf(id).filter(x=>isEx(id,x))),rel('Siblings',siblingsOf(id)),cousinsOf(id).map(([lbl,ids])=>rel(lbl,ids)),rel('Children',sortByBirth(childrenOf(id))),
       gapBox,privBox,
-      h('div',{class:'side-actions'},btn('Add a relative',()=>openAddFlow(id),'primary'),
+      h('div',{class:'side-actions'},S.view==='all'?btn('Center the tree on them',()=>openFocus(id),'primary'):null,btn('Add a relative',()=>openAddFlow(id),'primary'),
         custodian?btn('Edit',()=>openEditPerson(id)):null,custodian?btn(isPh(id)?'This is actually…':'Merge into…',()=>openMerge(id)):null,custodian?btn('Delete',()=>deletePerson(id),'danger'):null)));
 }
 
+/* date entry: Day and Month dropdowns, a 4-digit Year box and an Approx. tick; every part optional */
+function dateField(label,value,hint){
+  const p=dparts(value)||{ap:false,y:null,m:null,d:null};
+  const day=h('select',{'aria-label':label+': day'},h('option',{value:'',text:'Day'}),Array.from({length:31},(_,i)=>h('option',{value:String(i+1),text:String(i+1)})));
+  const mon=h('select',{'aria-label':label+': month'},h('option',{value:'',text:'Month'}),MON_FULL.map((n,i)=>h('option',{value:String(i+1),text:n})));
+  const yr=h('input',{type:'text',inputmode:'numeric',maxlength:'4',placeholder:'Year','aria-label':label+': year',autocomplete:'off'});
+  const ap=h('input',{type:'checkbox','aria-label':label+': approximate year'});
+  day.value=p.d?String(p.d):'';mon.value=p.m?String(p.m):'';yr.value=p.y?String(p.y):'';ap.checked=!!p.ap;
+  const msg=h('span',{class:'hint'});
+  function read(){
+    const d=day.value?+day.value:null,m=mon.value?+mon.value:null,ys=yr.value.trim();
+    if(ys&&!/^\d{4}$/.test(ys))return{ok:false,why:'The year needs 4 digits, like 1952.'};
+    const y=ys?+ys:null;
+    if(y&&(y<1000||y>new Date().getFullYear()))return{ok:false,why:'That year looks wrong.'};
+    if(d&&!m)return{ok:false,why:'Pick the month too, or clear the day.'};
+    if(d&&m){const dim=new Date(y||2000,m,0).getDate();if(d>dim)return{ok:false,why:`${MON_FULL[m-1]} has only ${dim} days${y?' in '+y:''}.`};}
+    if(ap.checked&&!y)return{ok:false,why:'Approx. applies to the year, so add a year or untick it.'};
+    return{ok:true,value:dstr({ap:ap.checked,y,m,d})};
+  }
+  function upd(){const r=read();if(!r.ok){msg.textContent=r.why;msg.style.color='var(--danger)';}else{msg.textContent=r.value?'✓ '+fmtDate(r.value,false,true):'';msg.style.color=r.value?'var(--alive)':'';}}
+  yr.addEventListener('input',()=>{const c=yr.value.replace(/\D/g,'').slice(0,4);if(c!==yr.value)yr.value=c;upd();});
+  [day,mon,ap].forEach(e=>e.addEventListener('change',upd));
+  const el=h('div',{class:'field'},h('span',{class:'lbl',text:label}),
+    h('div',{class:'dategrp'},day,mon,yr,h('label',{class:'approx'},ap,'Approx.')),msg,hint?h('span',{class:'hint',text:hint}):null);
+  upd();
+  return{el,read,focus:()=>(day.value||mon.value?yr:day).focus()};
+}
 /* ---------- person form (shared by relatives and custodians) ---------- */
 function personForm(init,o){
   init=init||{};const f={};
@@ -840,12 +1241,11 @@ function personForm(init,o){
   f.commonName=h('input',{type:'text',value:init.commonName||'',autocomplete:'off',placeholder:'e.g. Sunny, Bittu, Pinky'});
   f.birthSurname=h('input',{type:'text',value:init.birthSurname||'',autocomplete:'off'});
   f.sex=h('select',{},h('option',{value:'',text:'Prefer not to say'}),h('option',{value:'F',text:'Female'}),h('option',{value:'M',text:'Male'}));f.sex.value=init.sex||'';
-  f.born=h('input',{type:'text',value:dateToInput(init.born),placeholder:'e.g. 1952 · Mar 1952 · 14 Mar 1952'});
+  const bornF=dateField('Date of birth (optional)',init.born,'Fill in whatever you know. Leave the rest blank.');
   const rn='st'+Math.random().toString(36).slice(2,7);
   const st0=init.status||'unknown';
   f.liv=h('input',{type:'radio',name:rn,checked:st0==='living'});f.dec=h('input',{type:'radio',name:rn,checked:st0==='deceased'});f.unk=h('input',{type:'radio',name:rn,checked:st0==='unknown'});
-  f.died=h('input',{type:'text',value:dateToInput(init.died),placeholder:'Leave blank if not known'});
-  const diedWrap=field('Date of death (optional)',f.died);diedWrap.insertBefore(datePreview(f.died),null);diedWrap.hidden=st0!=='deceased';
+  const diedF=dateField('Date of death (optional)',init.died,null);const diedWrap=diedF.el;diedWrap.hidden=st0!=='deceased';
   [f.liv,f.dec,f.unk].forEach(r=>r.addEventListener('change',()=>{diedWrap.hidden=!f.dec.checked;}));
   const pv=init.priv||{};
   f.residence=h('input',{type:'text',value:pv.residence||'',placeholder:'City, state / country',disabled:!!o.privLocked});
@@ -858,9 +1258,10 @@ function personForm(init,o){
     const sel=h('select',{'aria-label':'Relationship'},h('option',{value:'',text:'Choose how they are related…'}),REL_TYPES.map(([v,t])=>h('option',{value:v,text:t})));
     sel.value=type||'';
     const pk=picker(o.pool,null);const hint=h('div');
-    const row={sel,pk};
+    const via=h('select',{'aria-label':'Which side'});const viaWrap=h('label',{class:'field',style:'margin:8px 0 0',hidden:true},h('span',{class:'lbl',text:'Paternal or maternal cousin?'}),via);
+    const row={sel,pk,via,viaWrap};
     row.el=h('div',{class:'relrow'},h('div',{class:'relrow-top'},h('span',{class:'muted',text:'This person'}),sel,
-      h('button',{type:'button',class:'icon-btn','aria-label':'Remove relationship',text:'✕',onclick:()=>{row.el.remove();relRows.splice(relRows.indexOf(row),1);refreshHints();}})),pk.el,hint);
+      h('button',{type:'button',class:'icon-btn','aria-label':'Remove relationship',text:'✕',onclick:()=>{row.el.remove();relRows.splice(relRows.indexOf(row),1);refreshHints();}})),pk.el,viaWrap,hint);
     row.hint=hint;relRows.push(row);relList.append(row.el);
     sel.addEventListener('change',refreshHints);pk.onchange=refreshHints;
     if(target)pk.set(target);
@@ -869,6 +1270,7 @@ function personForm(init,o){
   function refreshHints(){
     const chosen=new Set(relRows.map(r=>r.pk.get()).filter(Boolean));
     relRows.forEach(r=>{r.hint.innerHTML='';const t=r.pk.get();
+      if(isCousin(r.sel.value)&&t){const keep=r.via.value,opts=cousinVia(t);r.via.innerHTML='';opts.forEach(([v,tx])=>r.via.append(h('option',{value:v,text:tx})));if(opts.some(x=>x[0]===keep))r.via.value=keep;r.viaWrap.hidden=false;}else r.viaWrap.hidden=true;
       if(r.sel.value==='partner'&&t&&P(t))childrenOf(t).filter(x=>!chosen.has(x)&&P(x).parents.length<2).forEach(x=>r.hint.append(h('button',{type:'button',class:'chip small',text:'+ Also a parent of '+dname(P(x)),onclick:()=>addRelRow('parent',x)})));
       if(r.sel.value==='parent'&&t&&P(t))siblingsOf(t).filter(x=>!chosen.has(x)&&P(x).parents.length<2).forEach(x=>r.hint.append(h('button',{type:'button',class:'chip small',text:'+ Also a parent of '+dname(P(x)),onclick:()=>addRelRow('parent',x)})));
       if(r.sel.value==='child'&&t&&P(t))partnersOf(t).filter(x=>!chosen.has(x)).forEach(x=>r.hint.append(h('button',{type:'button',class:'chip small',text:'+ Also a child of '+name(P(x)),onclick:()=>addRelRow('child',x)})));
@@ -879,7 +1281,7 @@ function personForm(init,o){
     h('div',{class:'row3'},field('First name *',f.given),field('Middle name',f.middleName),field('Last name *',f.surname)),
     field('Commonly known as (optional)',f.commonName,'The name family actually uses, if different from the first name'),
     field('Birth surname (if different)',f.birthSurname,'For example a maiden name'),
-    h('div',{class:'row2'},field('Sex (optional)',f.sex),(()=>{const fl=field('Date of birth (optional)',f.born,'Leave blank if unknown. Year alone is fine; add "c." if approximate.');fl.insertBefore(datePreview(f.born),fl.querySelector('.hint'));return fl;})()),
+    h('div',{class:'row2'},field('Sex (optional)',f.sex),h('div')),bornF.el,
     h('span',{class:'lbl',text:'Living or deceased?'}),h('div',{class:'radios'},h('label',{},f.liv,'Living'),h('label',{},f.dec,'Deceased'),h('label',{},f.unk,'Not sure')),
     diedWrap,field('Notes',f.notes),
     h('div',{class:'relsec'},h('span',{class:'lbl',text:'Where they live & how to reach them (optional, private)'}),
@@ -894,15 +1296,16 @@ function personForm(init,o){
     const errs=[],given=f.given.value.trim(),surname=f.surname.value.trim();
     if(!given&&!o.allowBlankName)errs.push('First name is needed.');
     if(!surname&&!o.allowBlankName)errs.push('Last name is needed.');
-    const b=parseDate(f.born.value);if(!b.ok){errs.push('Date of birth: '+(b.why||'not understood — try 1952, Mar 1952 or 14 Mar 1952.'));f.born.focus();}
-    const status=f.dec.checked?'deceased':f.liv.checked?'living':'unknown',deceased=status==='deceased',d=parseDate(deceased?f.died.value:'');if(!d.ok){errs.push('Date of death: '+(d.why||'not understood — try 1990, Mar 1990 or 14 Mar 1990.'));f.died.focus();}
+    const b=bornF.read();if(!b.ok){errs.push('Date of birth: '+b.why);bornF.focus();}
+    const status=f.dec.checked?'deceased':f.liv.checked?'living':'unknown',deceased=status==='deceased',d=deceased?diedF.read():{ok:true,value:''};if(!d.ok){errs.push('Date of death: '+d.why);diedF.focus();}
     if(b.ok&&d.ok&&year(b.value)&&year(d.value)&&year(d.value)<year(b.value))errs.push('Date of death is before date of birth.');
     const rels=[];
-    for(const r of relRows){if(!r.sel.value&&!r.pk.get())continue;if(!r.sel.value||!r.pk.get()){errs.push('Finish each relationship (how they are related and to whom), or remove it with ✕.');break;}rels.push({type:r.sel.value,target:r.pk.get()});}
+    for(const r of relRows){if(!r.sel.value&&!r.pk.get())continue;if(!r.sel.value||!r.pk.get()){errs.push('Finish each relationship (how they are related and to whom), or remove it with ✕.');break;}rels.push(Object.assign({type:r.sel.value,target:r.pk.get()},isCousin(r.sel.value)&&r.via.value?{via:r.via.value}:{}));}
     if(!errs.length&&o.requireRel&&!rels.length&&!softRelOk){softRelOk=true;showErr('No relationship added, so this person won\'t be connected to anyone in the tree. If you know how they\'re related, add it above or describe it in Notes. Tap save again to continue without one.');return null;}
     if(errs.length){showErr(errs.join(' '));return null;}
     showErr('');
-    return{priv:o.privLocked?undefined:{residence:f.residence.value.trim(),phone:f.phone.value.trim(),email:f.email.value.trim()},person:{given,middleName:f.middleName.value.trim(),commonName:f.commonName.value.trim(),surname,birthSurname:f.birthSurname.value.trim(),sex:f.sex.value,born:b.value,status,deceased,died:deceased?d.value:'',notes:f.notes.value.trim()},rels};
+    let sex=f.sex.value;if(!sex){if(rels.some(x=>x.type==='cousin-m'))sex='M';else if(rels.some(x=>x.type==='cousin-f'))sex='F';}
+    return{priv:o.privLocked?undefined:{residence:f.residence.value.trim(),phone:f.phone.value.trim(),email:f.email.value.trim()},person:{given,middleName:f.middleName.value.trim(),commonName:f.commonName.value.trim(),surname,birthSurname:f.birthSurname.value.trim(),sex,born:b.value,status,deceased,died:deceased?d.value:'',notes:f.notes.value.trim()},rels};
   }
   return{el,read,showErr,addRelRow,isBlank:()=>!f.given.value.trim()&&!f.surname.value.trim()};
 }
@@ -922,7 +1325,7 @@ function openAddFlow(prefill){
     form=personForm({},{pool,requireRel:!(treeEmpty&&!sub.people.length),rels:prefill&&!sub.people.length?[{type:'',target:prefill}]:[]});
     dupWarned=null;
     const list=sub.people.length?h('div',{class:'box'},h('div',{class:'lbl',text:`Already in this form (${sub.people.length})`}),
-      sub.people.map((p,i)=>h('div',{class:'curr'},h('span',{text:`${p.given} ${p.surname} — ${p.rels.map(r=>relLabel(r.type)+' '+targetName(r.target,sub)).join('; ')||'first person'}`}),
+      sub.people.map((p,i)=>h('div',{class:'curr'},h('span',{text:`${p.given} ${p.surname} — ${p.rels.map(r=>relLabel(r.type)+' '+targetName(r.target,sub)+viaText(r)).join('; ')||'first person'}`}),
         h('button',{type:'button',class:'icon-btn',text:'✕','aria-label':'Remove',onclick:()=>{sub.people.splice(i,1);stepForm();}})))):null;
     m.set([
       !sub.people.length?h('p',{class:'muted',text:'Add one person at a time. You can add several before sending. When you finish you get a short code to send to a family custodian, who adds everyone to the tree.'}):null,
@@ -938,33 +1341,58 @@ function openAddFlow(prefill){
     sub.people.push(Object.assign({tmp:'n'+(++n)},r.person,{rels:r.rels},hasPriv(r.priv)?{priv:cleanPriv(r.priv)}:{}));
     return true;
   }
-  function finish(){
+  async function finish(){
     if(!(form.isBlank()&&sub.people.length)){if(!saveCurrent())return;}
     sub.by=byInp.value.trim();try{localStorage.setItem('ft-by',sub.by);}catch(e){}
     const code='FT1.'+b64e(JSON.stringify(sub));
     const msg=`Family tree addition${sub.by?' from '+sub.by:''}: ${sub.people.map(p=>p.given+' '+p.surname).join(', ')}\n${code}`;
     const ta=h('textarea',{class:'code',rows:6,readonly:true});ta.value=msg;
     const cust=DATA.custodians.filter(c=>c.name);
-    m.set([h('p',{},h('b',{text:'Almost done. '}),'Copy this message and send it to a custodian by text, WhatsApp or email. Nothing is added until a custodian imports it.'),ta,
+    let why=null;
+    if(relayOn()){
+      m.set(h('p',{text:'Sending…'}),[]);
+      const r=await relaySubmit(sub);
+      if(r.ok){m.set([h('p',{},h('b',{text:'Sent! '}),'A custodian will check your additions and add them to the tree. There is nothing else you need to do.'),
+        h('details',{},h('summary',{style:'cursor:pointer;color:var(--muted);font-size:13px',text:'Backup code (only if a custodian asks for it)'}),ta)],[btn('Done',m.close,'primary')]);return;}
+      why=h('div',{class:'warn',text:r.err+' No problem: copy this message and send it to a custodian instead.'});
+    }
+    m.set([why,h('p',{},h('b',{text:'Almost done. '}),'Copy this message and send it to a custodian by text, WhatsApp or email. Nothing is added until a custodian adds it.'),ta,
       cust.length?h('div',{class:'box'},h('div',{class:'lbl',text:'Custodians'}),cust.map(c=>h('div',{text:c.name+(c.contact?' — '+c.contact:'')}))):null],
       [btn('Close',m.close),navigator.share?btn('Share…',()=>navigator.share({text:msg}).catch(()=>{})):null,btn('Copy message',()=>copyText(msg,ta),'primary')].filter(Boolean));
   }
   stepForm();
 }
-function targetName(t,sub){if(/^n\d+$/.test(t)){const p=sub.people.find(x=>x.tmp===t);return p?p.given+' '+p.surname:'(missing)';}return P(t)?name(P(t)):'(not in tree)';}
+function targetName(t,sub){if(/^n\d+$/.test(t)){const p=sub.people.find(x=>x.tmp===t);return p?p.given+' '+p.surname:'(missing)';}return P(t)?dname(P(t)):'(not in tree)';}
 
 /* ---------- custodian tools ---------- */
-function toggleCustodian(){
+async function toggleCustodian(){
+  if(!custodian&&viaRelay()){
+    const w=await relayWhoami();
+    if(w===false&&!await askPassword())return;
+    if(w===null)toast(RELAY_DOWN,6000);
+  }
   custodian=!custodian;$('#cust-bar').hidden=!custodian;
   const b=$('#cust-btn');b.classList.toggle('on',custodian);b.textContent=custodian?'Exit custodian':'Custodian';
-  if(custodian){if(ghConf()){if(getTok())refreshFromGitHub();toast('Custodian mode: tap Publish when you are done to save your changes to GitHub.',5000);}else toast('Custodian mode: edits stay on this device until you save family.json and put it on the website.',5000);}
-  renderTree();renderSide();
+  if(custodian){
+    const k=pubKind();
+    if(k==='relay'){refreshLatest();refreshPending();toast((RELAY_WHO?'Signed in as '+RELAY_WHO+'. ':'')+'New additions wait under Pending. Publish saves your changes for everyone.',5000);}
+    else if(k==='github'){if(getTok())refreshLatest();toast('Custodian mode: tap Publish when you are done to save your changes to GitHub.',5000);}
+    else toast('Custodian mode: edits stay on this device until you save family.json and put it on the website.',5000);
+  }
+  updateStatus();renderTree();renderSide();
 }
 function markDirty(){
   dirty=true;updateStatus();
   try{localStorage.setItem(DRAFT_KEY,JSON.stringify({at:Date.now(),base:loadedStamp,baseData:BASE,data:DATA}));}catch(e){}
 }
-function updateStatus(){const s=$('#status');if(!s)return;s.textContent=dirty?(ghConf()?'Unpublished changes — tap Publish':'Unsaved changes — save family.json and publish it'):'No unpublished changes';s.classList.toggle('dirty',dirty);}
+function updateStatus(){
+  const s=$('#status');if(!s)return;const k=pubKind();
+  s.textContent=(k==='relay'&&RELAY_WHO?`Signed in as ${RELAY_WHO} · `:'')+(dirty?(k?'Unpublished changes — tap Publish':'Unsaved changes — save family.json and publish it'):'No unpublished changes');
+  s.classList.toggle('dirty',dirty);
+  const pb=$('#publish-btn');if(pb)pb.hidden=!k;
+  const sb=$('#save-btn');if(sb){sb.textContent=k?'Download backup':'Save family.json';sb.classList.toggle('primary',!k);}
+  updatePendingBtn();
+}
 function checkDraft(){
   let d=null;try{d=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');}catch(e){}
   if(!d||!d.data)return;
@@ -1030,7 +1458,7 @@ function openEditPerson(id,prefill){
       }
     }else pid=createPerson(r.person);
     if(r.priv!==undefined&&(hasPriv(r.priv)||P(pid).priv))await setPriv(pid,r.priv);
-    const warns=[];r.rels.forEach(x=>applyRel(pid,x.type,x.target,warns));
+    const warns=[];r.rels.forEach(x=>applyRel(pid,x.type,x.target,warns,x.via));
     if(treeEmpty)DATA.home=pid;
     m.close();afterChange(pid);
     if(warns.length)toast(warns.join(' '),7000);
@@ -1044,6 +1472,50 @@ async function deletePerson(id){
   rebuildIndex();
   afterChange(next||pickHome());
 }
+/* one submission, for review: who sent it and, per person, add as new / same as someone already here / skip */
+function subReview(s,choices){
+  const done=DATA.imported.includes(s.sid),out=[];
+  out.push(h('div',{class:'lbl',style:'margin-top:4px',text:`From ${s.by||'(no name)'} · ${String(s.receivedAt||s.at||'').slice(0,10)} · ${s.people.length} ${s.people.length===1?'person':'people'}`}));
+  if(done)out.push(h('div',{class:'warn',text:'This one was already added to the tree before. It is set to skip.'}));
+  s.people.forEach((p,j)=>{
+    const key=s.sid+'|'+p.tmp,d=findDups(p),exact=d.find(i=>P(i).born&&P(i).born===p.born);
+    choices[key]=done?'skip':exact||'new';
+    const rn='r'+s.sid+'_'+j;
+    const opt=(val,label)=>h('label',{class:'opt'},h('input',{type:'radio',name:rn,checked:choices[key]===val,onchange:()=>{choices[key]=val;}}),h('span',{text:label}));
+    const ls=lifespan(Object.assign({placeholder:false},p));
+    out.push(h('div',{class:'box'},
+      h('h4',{text:[p.given,p.middleName,p.commonName?'“'+p.commonName+'”':'',p.surname].filter(Boolean).join(' ')+(p.birthSurname?` (née ${p.birthSurname})`:'')}),
+      h('div',{class:'muted',text:[STATUS_LABEL[p.status]||'Not known',ls,(p.rels||[]).map(r=>relLabel(r.type)+' '+targetName(r.target,s)+viaText(r)).join('; ')||'No relationship given, so link them with Edit after adding'].filter(Boolean).join(' · ')}),
+      p.notes?h('div',{class:'muted',text:'Notes: '+p.notes}):null,
+      hasPriv(p.priv)?h('div',{class:'muted',text:'Private: '+[p.priv.residence,p.priv.phone,p.priv.email].filter(Boolean).join(' · ')}):null,
+      opt('new','Add as a new person'),
+      d.map(i=>opt(i,`Same person as ${fullName(P(i))}${lifespan(P(i))?' ('+lifespan(P(i))+')':''}: keep them and just add the relationships and any missing details`)),
+      opt('skip','Skip')));
+  });
+  return out;
+}
+/* put reviewed submissions into the tree; null if a needed passphrase wasn't given */
+async function applySubs(subs,choices){
+  const needs=subs.some(s=>s.people.some(p=>choices[s.sid+'|'+p.tmp]!=='skip'&&hasPriv(p.priv)));
+  if(needs&&!await ensureKey()){toast('Some people include contact details, which need the family passphrase. Set or enter it, then try again.',6000);return null;}
+  const warns=[];let added=0,first=null;
+  for(const s of subs){
+    const map={},pend=[];
+    s.people.forEach(p=>{const c=choices[s.sid+'|'+p.tmp];if(c==='skip')return;
+      if(c==='new'||!P(c)){map[p.tmp]=createPerson(p);added++;if(hasPriv(p.priv))pend.push([map[p.tmp],cleanPriv(p.priv)]);}
+      else{const e=P(c),f=cleanFields(p);for(const k of FIELDS)if(!e[k]&&f[k])e[k]=f[k];if(f.status&&f.status!=='unknown'&&e.status==='unknown'){e.status=f.status;e.deceased=f.status==='deceased';}map[p.tmp]=c;if(hasPriv(p.priv)){const o=Object.assign({},PRIV[c]||{}),nn=cleanPriv(p.priv);for(const k in nn)if(!o[k]&&nn[k])o[k]=nn[k];pend.push([c,o]);}}
+      first=first||map[p.tmp];});
+    s.people.forEach(p=>{const a=map[p.tmp];if(!a)return;
+      (Array.isArray(p.rels)?p.rels:[]).forEach(r=>{const b=/^n\d+$/.test(r.target)?map[r.target]:(P(r.target)?r.target:null);
+        if(!b){warns.push(`${name(P(a))}: the person they're related to (${relLabel(r.type)}) wasn't found or was skipped.`);return;}
+        applyRel(a,r.type,b,warns,typeof r.via==='string'?r.via:'');});});
+    for(const [pid,o] of pend)await setPriv(pid,o);
+    if(!DATA.imported.includes(s.sid))DATA.imported.push(s.sid);
+  }
+  DATA.imported=DATA.imported.slice(-2000);
+  afterChange(first);
+  return{added,warns,first};
+}
 function openImport(){
   const ta=h('textarea',{rows:6,placeholder:'Paste one or more messages relatives sent you…'});
   const m=modal('Import submissions',{wide:true,sticky:true});
@@ -1052,52 +1524,16 @@ function openImport(){
     const toks=ta.value.match(/FT1\.[A-Za-z0-9_-]+/g)||[];
     if(!toks.length){toast('No codes found. They start with FT1.');return;}
     const subs=[],bad=[],sids=new Set();
-    toks.forEach((t,i)=>{try{const s=JSON.parse(b64d(t.slice(4)));if(!s||!Array.isArray(s.people))throw 0;if(sids.has(s.sid))return;sids.add(s.sid);s.people=s.people.filter(p=>p&&/^n\d+$/.test(p.tmp));subs.push(s);}catch(e){bad.push(i+1);}});
+    toks.forEach((t,i)=>{try{const s=JSON.parse(b64d(t.slice(4)));if(!s||!Array.isArray(s.people)||typeof s.sid!=='string')throw 0;if(sids.has(s.sid))return;sids.add(s.sid);s.people=s.people.filter(p=>p&&/^n\d+$/.test(p.tmp));subs.push(s);}catch(e){bad.push(i+1);}});
     const choices={},secs=[];
-    subs.forEach(s=>{
-      const done=DATA.imported.includes(s.sid);
-      secs.push(h('div',{class:'lbl',style:'margin-top:12px',text:`From ${s.by||'(no name)'} · ${s.at||''} · ${s.people.length} ${s.people.length===1?'person':'people'}`}));
-      if(done)secs.push(h('div',{class:'warn',text:'This one was already imported before. It is set to skip.'}));
-      s.people.forEach((p,j)=>{
-        const key=s.sid+'|'+p.tmp,d=findDups(p),exact=d.find(i=>P(i).born&&P(i).born===p.born);
-        choices[key]=done?'skip':exact||'new';
-        const rn='r'+secs.length+'_'+j;
-        const opt=(val,label)=>h('label',{class:'opt'},h('input',{type:'radio',name:rn,checked:choices[key]===val,onchange:()=>{choices[key]=val;}}),h('span',{text:label}));
-        const ls=lifespan(Object.assign({placeholder:false},p));
-        secs.push(h('div',{class:'box'},
-          h('h4',{text:[p.given,p.middleName,p.commonName?'“'+p.commonName+'”':'',p.surname].filter(Boolean).join(' ')+(p.birthSurname?` (née ${p.birthSurname})`:'')}),
-          h('div',{class:'muted',text:[STATUS_LABEL[p.status]||'Not known',ls,(p.rels||[]).map(r=>relLabel(r.type)+' '+targetName(r.target,s)).join('; ')||'No relationship given, so link them with Edit after importing'].filter(Boolean).join(' · ')}),
-          p.notes?h('div',{class:'muted',text:'Notes: '+p.notes}):null,
-          hasPriv(p.priv)?h('div',{class:'muted',text:'Private: '+[p.priv.residence,p.priv.phone,p.priv.email].filter(Boolean).join(' · ')}):null,
-          opt('new','Add as a new person'),
-          d.map(i=>opt(i,`Same person as ${fullName(P(i))}${lifespan(P(i))?' ('+lifespan(P(i))+')':''}: keep them and just add the relationships and any missing details`)),
-          opt('skip','Skip')));
-      });
-    });
+    subs.forEach(s=>secs.push(...subReview(s,choices)));
     if(bad.length)secs.unshift(h('div',{class:'warn',text:`${bad.length} code(s) couldn't be read. They may have been cut off when copied.`}));
     m.set(secs,[btn('Back',()=>{m.close();openImport();}),btn('Add to tree',()=>apply(subs,choices),'primary')]);
   }
   async function apply(subs,choices){
-    const needs=subs.some(s=>s.people.some(p=>choices[s.sid+'|'+p.tmp]!=='skip'&&hasPriv(p.priv)));
-    if(needs&&!await ensureKey()){toast('Some people include contact details, which need the family passphrase. Set or enter it, then try again.',6000);return;}
-    const warns=[];let added=0,first=null;
-    for(const s of subs){
-      const map={},pend=[];
-      s.people.forEach(p=>{const c=choices[s.sid+'|'+p.tmp];if(c==='skip')return;
-        if(c==='new'||!P(c)){map[p.tmp]=createPerson(p);added++;if(hasPriv(p.priv))pend.push([map[p.tmp],cleanPriv(p.priv)]);}
-        else{const e=P(c),f=cleanFields(p);for(const k of FIELDS)if(!e[k]&&f[k])e[k]=f[k];if(f.status&&f.status!=='unknown'&&e.status==='unknown'){e.status=f.status;e.deceased=f.status==='deceased';}map[p.tmp]=c;if(hasPriv(p.priv)){const o=Object.assign({},PRIV[c]||{}),nn=cleanPriv(p.priv);for(const k in nn)if(!o[k]&&nn[k])o[k]=nn[k];pend.push([c,o]);}}
-        first=first||map[p.tmp];});
-      s.people.forEach(p=>{const a=map[p.tmp];if(!a)return;
-        (Array.isArray(p.rels)?p.rels:[]).forEach(r=>{const b=/^n\d+$/.test(r.target)?map[r.target]:(P(r.target)?r.target:null);
-          if(!b){warns.push(`${name(P(a))}: the person they're related to (${relLabel(r.type)}) wasn't found or was skipped.`);return;}
-          applyRel(a,r.type,b,warns);});});
-      for(const [pid,o] of pend)await setPriv(pid,o);
-      if(!DATA.imported.includes(s.sid))DATA.imported.push(s.sid);
-    }
-    DATA.imported=DATA.imported.slice(-2000);
-    afterChange(first);
-    m.set([h('p',{text:`Added ${added} new ${added===1?'person':'people'}.`}),warns.length?h('div',{class:'warn'},warns.map(w=>h('div',{text:w}))):null,
-      h('p',{class:'muted',text:'Remember to save family.json and put it on the website so everyone sees the changes.'})],[btn('Done',m.close,'primary')]);
+    const res=await applySubs(subs,choices);if(!res)return;
+    m.set([h('p',{text:`Added ${res.added} new ${res.added===1?'person':'people'}.`}),res.warns.length?h('div',{class:'warn'},res.warns.map(w=>h('div',{text:w}))):null,
+      h('p',{class:'muted',text:pubKind()?'Tap Publish so everyone sees the changes.':'Remember to save family.json and put it on the website so everyone sees the changes.'})],[btn('Done',m.close,'primary')]);
   }
 }
 function openSettings(){
@@ -1109,14 +1545,26 @@ function openSettings(){
   const passField=h('label',{class:'field'},h('span',{class:'lbl',text:DATA.vault?'Change family passphrase':'Family passphrase'}),
     DATA.vault&&!KEY?h('span',{class:'hint',text:'Unlock with the current passphrase first (open anyone\'s contact details), then change it here.'}):np,
     h('span',{class:'hint',text:'Encrypts residence and contact details. Share it with family by phone or in person, never on the website. Keep it written down with the other custodians: if it is lost, those details can\'t be recovered.'}));
+  const ru=h('input',{type:'url',value:DATA.relay||'',placeholder:'https://family-tree-relay.<your-name>.workers.dev',autocomplete:'off'});
+  const relayTest=btn('Test',async()=>{const u=ru.value.trim().replace(/\/+$/,'');if(!u){toast('Enter the relay address first.');return;}
+    try{const r=await fetch(u+'/',{cache:'no-store'});const j=await r.json().catch(()=>({}));toast(r.ok&&j.service==='family-tree-relay'?'The relay is working.':'That address answered, but it is not the family tree relay.');}catch(e){toast("Can't reach that address from this website. Check the address and the relay's ALLOWED_ORIGINS setting.",6000);}});
+  const relayField=h('div',{class:'field'},h('span',{class:'lbl',text:'Relay address'}),ru,
+    h('div',{style:'display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap'},relayTest,
+      relayOn()?(getPass()?[h('span',{class:'hint',text:RELAY_WHO?'Signed in as '+RELAY_WHO:'Signed in on this device'}),btn('Sign out on this device',()=>{setPass('');RELAY_WHO='';updateStatus();toast('Signed out on this device.');m.close();})]
+        :btn('Sign in',()=>{m.close();askPassword().then(()=>{updateStatus();refreshPending();});})):null),
+    h('span',{class:'hint',text:"Set once by the steward. With a relay, relatives' additions go to a private queue for custodians to approve, and custodians sign in with their own password instead of GitHub. Leave blank to use copy-paste codes only."}));
   const m=modal('Settings',{wide:true});
   m.set([h('label',{class:'field'},h('span',{class:'lbl',text:'Tree title'}),t),
     h('label',{class:'field'},h('span',{class:'lbl',text:'Custodians'}),c,h('span',{class:'hint',text:'Shown to relatives so they know who to send their additions to.'})),
     h('div',{class:'field'},h('span',{class:'lbl',text:'Person the tree opens on'}),home.el),passField,
-    ghConf()?h('div',{class:'field'},h('span',{class:'lbl',text:'GitHub publishing'}),h('div',{class:'hint',style:'margin-bottom:6px',text:`Repository ${ghConf().owner}/${ghConf().repo} · ${getTok()?'this device is connected':'this device is not connected yet'}`}),getTok()?btn('Forget token on this device',()=>{setTok('');toast('Token removed from this device.');m.close();}):btn('Connect this device',()=>{m.close();askToken();})):null],
+    relayField,
+    ghConf()?h('div',{class:'field'},h('span',{class:'lbl',text:'GitHub token (backup way to publish)'}),h('div',{class:'hint',style:'margin-bottom:6px',text:`Repository ${ghConf().owner}/${ghConf().repo} · ${getTok()?'this device is connected':'this device is not connected yet'}`}),getTok()?btn('Forget token on this device',()=>{setTok('');toast('Token removed from this device.');m.close();}):btn('Connect this device',()=>{m.close();askToken();})):null],
     [btn('Cancel',m.close),btn('Save',async()=>{
       const pw=np.value;
       if(pw&&(!DATA.vault||KEY)){if(pw.length<8){toast('The passphrase needs at least 8 characters.');return;}if(!cryptoOK()){toast('Encryption needs the page served over https.');return;}await createVault(pw);renderSide();}
+      const rv=ru.value.trim().replace(/\/+$/,'');
+      if(rv&&!/^https:\/\/[^\s]+$/.test(rv)&&!/^http:\/\/localhost(:\d+)?$/.test(rv)){toast('The relay address should start with https://');return;}
+      if(rv!==(DATA.relay||'')){if(rv)DATA.relay=rv;else delete DATA.relay;S.pubMode=null;}
       DATA.title=t.value.trim()||'Our Family Tree';
       DATA.custodians=c.value.split('\n').map(l=>{const [n,...r]=l.split(/\s+[—–-]\s+/);return{name:(n||'').trim(),contact:r.join(' - ').trim()};}).filter(x=>x.name);
       DATA.home=home.get();$('#title').textContent=DATA.title;document.title=DATA.title;m.close();markDirty();toast('Settings updated');},'primary')]);
@@ -1137,10 +1585,12 @@ function showCopy(filename,text){
 async function saveJson(){
   DATA.updated=new Date().toISOString();
   const ok=await saveFile('family.json',JSON.stringify(DATA,null,1),'application/json');
-  if(ok&&ghConf()){toast('Backup downloaded. Use Publish to update the website.',5000);return;}
+  if(ok&&pubKind()){toast('Backup downloaded. Use Publish to update the website.',5000);return;}
   if(ok){dirty=false;loadedStamp=DATA.updated;updateStatus();try{localStorage.removeItem(DRAFT_KEY);}catch(e){}toast('Saved. Replace family.json on the website to publish it.',5000);}
 }
-function gdate(v){const ap=v[0]==='~';const [y,m,d]=(ap?v.slice(1):v).split('-');return(ap?'ABT ':'')+(d?`${+d} ${MON[+m-1].toUpperCase()} ${y}`:m?`${MON[+m-1].toUpperCase()} ${y}`:y);}
+function gdate(v){const p=dparts(v);if(!p)return'';
+  if(!p.y)return`(${p.d?p.d+' ':''}${MON_FULL[p.m-1]}, year unknown)`;
+  return(p.ap?'ABT ':'')+(p.d?p.d+' ':'')+(p.m?MON[p.m-1].toUpperCase()+' ':'')+p.y;}
 function toGedcom(){
   const g=s=>String(s||'').replace(/[\r\n]+/g,' ').replace(/@/g,'@@').trim();
   const ids=Object.keys(DATA.people),xi={};ids.forEach((id,i)=>xi[id]='@I'+(i+1)+'@');
@@ -1191,10 +1641,13 @@ function init(data){
   DATA=normalize(data);BASE=clone(DATA);loadedStamp=DATA.updated||null;rebuildIndex();shell();document.title=DATA.title;
   const hid=decodeURIComponent(location.hash.slice(1));
   const start=P(hid)?hid:pickHome();
-  if(start)setFocus(start);else{renderTree();renderSide();}
+  if(hid==='all'&&start){S.view='all';S.focus=start;updateViewBtn();renderAll();renderSide();}
+  else if(start)setFocus(start);else{renderTree();renderSide();}
   checkDraft();
 }
-window.addEventListener('hashchange',()=>{const id=decodeURIComponent(location.hash.slice(1));if(DATA&&P(id)&&id!==S.focus)setFocus(id);});
+window.addEventListener('hashchange',()=>{if(!DATA)return;const id=decodeURIComponent(location.hash.slice(1));
+  if(id==='all'){if(S.view!=='all')openAll();return;}
+  if(P(id)&&(S.view==='all'||id!==S.focus)){S.view='focus';updateViewBtn();setFocus(id);}});
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 (async function boot(){
   let data=null;
