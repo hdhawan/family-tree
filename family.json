@@ -1,7 +1,7 @@
 {
  "format": "family-tree/1",
  "title": "Our Family Tree",
- "updated": "2026-11-16T17:56:13.834Z",
+ "updated": "2026-11-16T18:32:47.639Z",
  "home": "plifohlwv",
  "custodians": [],
  "imported": [
@@ -39,7 +39,7 @@
    "surname": "Khan",
    "birthSurname": "Dhawan",
    "sex": "F",
-   "born": "1982-10-10",
+   "born": "1983-10-10",
    "died": "",
    "deceased": false,
    "status": "living",
@@ -390,7 +390,10 @@
    "deceased": false,
    "status": "living",
    "notes": "",
-   "parents": [],
+   "parents": [
+    "pf6p0fj3t",
+    "pzd1gd95h"
+   ],
    "partners": [
     "plifohlwv"
    ],
@@ -950,6 +953,47 @@
    "middleName": "",
    "commonName": "",
    "priv": "cCl/kZrG2ct33nZs2eOfmp8Er9av7GlYGEwuk4v8ZctweTLW6URIiSHnwwp603FWtvxa58bBmVAx4aXKSZhdYEoRjyrJHuwuERY="
+  },
+  "pf6p0fj3t": {
+   "id": "pf6p0fj3t",
+   "given": "Komala Lakshmi",
+   "surname": "Devaraj",
+   "birthSurname": "",
+   "sex": "F",
+   "born": "1954-05",
+   "died": "",
+   "deceased": false,
+   "status": "living",
+   "notes": "",
+   "parents": [],
+   "partners": [
+    "pzd1gd95h"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": "",
+   "priv": "8cX3RtDpS4vM0S/6Ed1olD3DyLUeGQyXl8WjW+wraKd+6FFUQhoy04+UdGcb87N5HJSVEMN/a4s7YKQY8TIQ05+WxNC3Gi9r"
+  },
+  "pzd1gd95h": {
+   "id": "pzd1gd95h",
+   "given": "Devaraj",
+   "surname": "Srinivas",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "1953-08",
+   "died": "2020-04",
+   "deceased": true,
+   "status": "deceased",
+   "notes": "",
+   "parents": [],
+   "partners": [
+    "pf6p0fj3t"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "middleName": "",
+   "commonName": ""
   }
  },
  "vault": {
