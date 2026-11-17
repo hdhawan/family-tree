@@ -1,7 +1,7 @@
 {
  "format": "family-tree/1",
  "title": "Our Family Tree",
- "updated": "2026-11-16T18:32:47.639Z",
+ "updated": "2026-11-17T00:09:07.374Z",
  "home": "plifohlwv",
  "custodians": [],
  "imported": [
@@ -999,5 +999,6 @@
  "vault": {
   "salt": "LDWjuBpDYVOfcTKGa3cWMQ==",
   "check": "T3faNE3aTaPYFezbPVmg+BIqe1IYIkzRfl3ilQZfF9w="
- }
+ },
+ "relay": "https://family-tree-relay.hdhawan.workers.dev"
 }
