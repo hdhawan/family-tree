@@ -1,7 +1,7 @@
 {
  "format": "family-tree/1",
  "title": "Our Family Tree",
- "updated": "2026-11-17T00:12:38.156Z",
+ "updated": "2026-11-17T00:24:17.133Z",
  "home": "plifohlwv",
  "custodians": [],
  "imported": [
@@ -253,14 +253,16 @@
    "id": "ptpar5wy6",
    "given": "Rajnish",
    "surname": "Arora",
-   "birthSurname": "",
+   "birthSurname": "Bhateja",
    "sex": "F",
    "born": "",
    "died": "",
    "deceased": false,
    "status": "living",
    "notes": "",
-   "parents": [],
+   "parents": [
+    "p9dqpkymu"
+   ],
    "partners": [
     "pyjoy4cr3"
    ],
@@ -268,7 +270,7 @@
    "placeholder": false,
    "middleName": "",
    "commonName": "Raji",
-   "priv": "OpsWf2rTdwPAlLHLINHcCemPqkkBE456t6NzgBUdFfEQSI0F/XXuRc/FKZyuy0/fxPsG7ws6b0HlHRx6Z4A3nHtD4L2UErEiG/M="
+   "priv": "UPxhHTRqSpQqio7ER58V8vGSTXtuJv67Hn+aSgKVdTpQYwbva+tooEZclh+Mt2CPCaz2PJYeBboSJJYCsNyoQA9i+DxH8Dr0v6g="
   },
   "p98hdj7ma": {
    "id": "p98hdj7ma",
@@ -484,7 +486,9 @@
     "p1mkyhx47",
     "p2q24g3dz"
    ],
-   "partners": [],
+   "partners": [
+    "pd83cfvwk"
+   ],
    "ex": [],
    "placeholder": false,
    "middleName": "",
@@ -712,8 +716,8 @@
    "ex": [],
    "placeholder": false,
    "middleName": "",
-   "commonName": "Livy",
-   "priv": "ZNj/Xa3Ofktgtfr2cYts5FNmaft5DFOzSHFofdALLEVleBE3pBt3ZLtKm5yOPEpnTCHmBUhGIM/caBiIcF3ZGG5I6uC4fMiw8ok="
+   "commonName": "",
+   "priv": "BTKg5xnY/XRmxabJPfPjAbOjv7Kz4R0baockPuq/nq0dseG3uKCHAvGaIwguBtkqj0cU7P5qxAaVsrjgsIQdI2qyk5O5aMYUCuY="
   },
   "poufrj838": {
    "id": "poufrj838",
@@ -1052,6 +1056,173 @@
    "middleName": "",
    "commonName": "",
    "surname": "Khan",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "notes": ""
+  },
+  "pcsgdqc6a": {
+   "id": "pcsgdqc6a",
+   "deceased": false,
+   "status": "living",
+   "parents": [
+    "p57qd3aqu",
+    "pp5lybijv"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Sia",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Mathur",
+   "birthSurname": "",
+   "sex": "F",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "q70bjiYZ2HSW8qrHfg4syStz54umAu1YWL3snBg9qnsZqj6zuLH4TQ7lZvI+HMpoBcsof6M2ahtwIxwAPqBU0es1TLHAj0CeCByq"
+  },
+  "pd83cfvwk": {
+   "id": "pd83cfvwk",
+   "deceased": false,
+   "status": "living",
+   "parents": [],
+   "partners": [
+    "pr8xjl482"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "given": "Divya",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Sharma",
+   "birthSurname": "",
+   "sex": "F",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "B+QHqezHg9ESy8i84sqv5WQZYOlvuDCwNHtLnheTHqZJpd/J5yhMIUxLsiPxcXNIfJR3ihENloPPWRdk5pmVqmuD2kbI37KmiQ=="
+  },
+  "prqf1ll3f": {
+   "id": "prqf1ll3f",
+   "deceased": false,
+   "status": "living",
+   "parents": [
+    "pd83cfvwk",
+    "pr8xjl482"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Sneha",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Sharma",
+   "birthSurname": "",
+   "sex": "F",
+   "born": "2025",
+   "died": "",
+   "notes": "",
+   "priv": "ynYrMqWd5kh9kAlr4uwqAWWQW5/iPepH1UqX5cyhddD7So1UnWxXdfcENiEpzOKyvbOFZWpRGZ8yF46JSeYGU04iAHy41wLHDg=="
+  },
+  "p839tzzpq": {
+   "id": "p839tzzpq",
+   "deceased": false,
+   "status": "living",
+   "parents": [
+    "p16s97ol7",
+    "p65u1a714"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Yuvaan",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Dhawan",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "/1Dk/I3Hfx3TNnqzpVeANV4Dit4/1qjeLcsV14rwVTO3Jx7sfCtzRv0YGKBpqRmRbi6llaXaWWnqp0DJW3S48vw0GUOfuMvmRLk="
+  },
+  "p81dbn7z2": {
+   "id": "p81dbn7z2",
+   "deceased": false,
+   "status": "living",
+   "parents": [
+    "p16s97ol7",
+    "p65u1a714"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Rehaan",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Dhawan",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "NRo0VYqwOxzMMNfjCNkvHQjJqgUWyLQv6DDhJ0wllpgpqISkyCKOAx3EOcrnZUv4UoYkRWKXP8eOziRjbBR69YyUnqDq/jXzz64="
+  },
+  "polbvb05s": {
+   "id": "polbvb05s",
+   "deceased": false,
+   "status": "living",
+   "parents": [
+    "p9dqpkymu"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Umesh",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Bhateja",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "notes": ""
+  },
+  "p9dqpkymu": {
+   "id": "p9dqpkymu",
+   "deceased": false,
+   "status": "unknown",
+   "parents": [],
+   "partners": [],
+   "ex": [],
+   "placeholder": true,
+   "given": "",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Arora",
+   "birthSurname": "",
+   "sex": "",
+   "born": "",
+   "died": "",
+   "notes": ""
+  },
+  "pt6z68yd8": {
+   "id": "pt6z68yd8",
+   "deceased": false,
+   "status": "living",
+   "parents": [
+    "p9dqpkymu"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Veerbhan",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Bhateja",
    "birthSurname": "",
    "sex": "M",
    "born": "",
