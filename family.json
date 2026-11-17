@@ -1,7 +1,7 @@
 {
  "format": "family-tree/1",
  "title": "Our Family Tree",
- "updated": "2026-11-17T00:09:12.340Z",
+ "updated": "2026-11-17T00:12:38.156Z",
  "home": "plifohlwv",
  "custodians": [],
  "imported": [
@@ -347,7 +347,9 @@
    "deceased": false,
    "status": "living",
    "notes": "",
-   "parents": [],
+   "parents": [
+    "pn158g82t"
+   ],
    "partners": [
     "pkf2buonk"
    ],
@@ -994,6 +996,67 @@
    "placeholder": false,
    "middleName": "",
    "commonName": ""
+  },
+  "pn158g82t": {
+   "id": "pn158g82t",
+   "deceased": false,
+   "status": "living",
+   "parents": [],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Farhat",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Begum",
+   "birthSurname": "",
+   "sex": "F",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "1c5md1j/G9QdyhvwmrT4bkn87MQhsogvoTVnzCQsmKa0nZaY1Qj7dz5cvoyNgQJlvY2EB1wyrn1y/HxaEF96vNM4t9v4Tm/YOn0EOZ0g"
+  },
+  "p2d9v70lw": {
+   "id": "p2d9v70lw",
+   "deceased": false,
+   "status": "living",
+   "parents": [
+    "pn158g82t"
+   ],
+   "partners": [
+    "p47hk6pbp"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "given": "Aayesha",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Khan",
+   "birthSurname": "",
+   "sex": "F",
+   "born": "",
+   "died": "",
+   "notes": ""
+  },
+  "p47hk6pbp": {
+   "id": "p47hk6pbp",
+   "deceased": false,
+   "status": "living",
+   "parents": [],
+   "partners": [
+    "p2d9v70lw"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "given": "Fayaz",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Khan",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "notes": ""
   }
  },
  "vault": {
