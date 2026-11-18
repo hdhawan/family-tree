@@ -1,7 +1,7 @@
 {
  "format": "family-tree/1",
  "title": "Our Family Tree",
- "updated": "2026-11-18T02:54:53.006Z",
+ "updated": "2026-11-18T02:56:32.241Z",
  "home": "plifohlwv",
  "custodians": [],
  "imported": [
@@ -527,7 +527,7 @@
    "birthSurname": "",
    "sex": "F",
    "born": "",
-   "died": "",
+   "died": "2026-10",
    "deceased": true,
    "status": "deceased",
    "notes": "",
