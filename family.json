@@ -1,7 +1,7 @@
 {
  "format": "family-tree/1",
  "title": "Our Family Tree",
- "updated": "2026-11-18T02:57:27.868Z",
+ "updated": "2026-11-18T03:09:54.076Z",
  "home": "plifohlwv",
  "custodians": [],
  "imported": [
@@ -535,7 +535,9 @@
     "phxm5m8hl",
     "p1oa7fzw4"
    ],
-   "partners": [],
+   "partners": [
+    "pxeioqyt7"
+   ],
    "ex": [],
    "placeholder": false,
    "middleName": "",
@@ -556,7 +558,9 @@
     "phxm5m8hl",
     "p1oa7fzw4"
    ],
-   "partners": [],
+   "partners": [
+    "pricoglcg"
+   ],
    "ex": [],
    "placeholder": false,
    "middleName": "",
@@ -603,9 +607,12 @@
     "p1oa7fzw4"
    ],
    "partners": [
-    "p2z2jw34o"
+    "p2z2jw34o",
+    "pztoggava"
    ],
-   "ex": [],
+   "ex": [
+    "pztoggava"
+   ],
    "placeholder": false,
    "middleName": "",
    "commonName": "Baby",
@@ -925,7 +932,7 @@
   "pdwsi35rk": {
    "id": "pdwsi35rk",
    "given": "Reetu",
-   "surname": "Mehta",
+   "surname": "Multani",
    "birthSurname": "",
    "sex": "F",
    "born": "",
@@ -934,14 +941,15 @@
    "status": "living",
    "notes": "",
    "parents": [
-    "ps51a3c3f"
+    "ps51a3c3f",
+    "pztoggava"
    ],
    "partners": [],
    "ex": [],
    "placeholder": false,
-   "middleName": "",
+   "middleName": "Kaur",
    "commonName": "",
-   "priv": "3AKd3xgJ1XMeBf18UNv66e/xMfFaRqmsoOWihHLIx05aR8VS05ytDKMMV1X2mxK46XZOy3TxRZDffWvrIUdgORecJgS1FKlD1w=="
+   "priv": "ggNOMdMq5r2pxhSSH7CkS1+BtpU9abK/ANrGiRihuh0+FozevyYzThqGCxa9QfcUhmcZezRFtHVnWRDXDq3pUuwAtTf4pBcPgA=="
   },
   "pqwkjcl6o": {
    "id": "pqwkjcl6o",
@@ -1360,6 +1368,266 @@
    "died": "~1947",
    "notes": "",
    "priv": "EptSLrxmWDNt4UoKJ+z8V7qILyrV9xg6j/lO+Y4fQNXY1oDd4QEvScwu3ljBXAQsNXemmhit7m/+/d9Ki8Ha1wYCfzXgOgIDlZjz7dlpAxxPhWFwX7tBfe2jxfC/lXd+UHNUdUexejs5rY4kENKnvw=="
+  },
+  "pxeioqyt7": {
+   "id": "pxeioqyt7",
+   "deceased": true,
+   "status": "deceased",
+   "parents": [],
+   "partners": [
+    "p0reg5e0v"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "given": "Subhash",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Kapoor",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "notes": ""
+  },
+  "po1rz2nof": {
+   "id": "po1rz2nof",
+   "deceased": false,
+   "status": "living",
+   "parents": [
+    "p0reg5e0v",
+    "pxeioqyt7"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Aseem",
+   "middleName": "",
+   "commonName": "Seemu",
+   "surname": "Kapoor",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "jZ27NCSPU+N+5cs076AD7Gm5zDYtPON3siYrGqeXhhj6DPpfQBywTmfIh45h8SROycUM5OuTjjxmmrl6zb7HTxo9KG9SeptFsiU8CRowQLdoyIvLt0OxavX8mqfBopIvplPVLopk"
+  },
+  "p3boihq1c": {
+   "id": "p3boihq1c",
+   "deceased": false,
+   "status": "living",
+   "parents": [
+    "p0reg5e0v",
+    "pxeioqyt7"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Vishal",
+   "middleName": "",
+   "commonName": "Vicky",
+   "surname": "Kapoor",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "PJfdJY9KdOrRYB2pCIqR40x8q68J8HXH6YmFc57GkwHLZQzisZ5t1eM7lIejKzk8HiRje0apQkbYhNNIwYT/e1/DeCT3/+2qad8fNUhmmeHdYlEMc97GpE6GA4TuCxPa4CY="
+  },
+  "pmuu1bp43": {
+   "id": "pmuu1bp43",
+   "deceased": false,
+   "status": "unknown",
+   "parents": [
+    "p0reg5e0v",
+    "pxeioqyt7"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Chetna",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Khurana",
+   "birthSurname": "Kapoor",
+   "sex": "F",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "rUx0uQAUd5eF9Ef9uBZiS0BcGoykyc30CWLs/EeCLBb9DiDOXc2f3Vhm5EibsY1Cph5h6Ds9Tg27wfa97+4fH67pD7dsKweYe/J6plUGzU4FFUJ1Zo/iKe4b70i8nGXeb7i8y3vzG7JaZRMA+zKzPu8="
+  },
+  "pricoglcg": {
+   "id": "pricoglcg",
+   "deceased": false,
+   "status": "unknown",
+   "parents": [],
+   "partners": [
+    "ph1hbrv3g"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "given": "Omprakash",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Chopra",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "TyJW5vM3f0WoW6pDMUHuOmpBmmaBFwkzc/m4QNNdwawvxsQNhjzTp2nvGMMgycgnBr8+gzDlV99dJ9brB8MF9Fz9E1AB/ivelGZ4NPIpQwJqObQ6pfZB1bpQl97+qD8GPyA="
+  },
+  "peio0y8qu": {
+   "id": "peio0y8qu",
+   "deceased": false,
+   "status": "unknown",
+   "parents": [
+    "pricoglcg",
+    "ph1hbrv3g"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Poonam",
+   "middleName": "",
+   "commonName": "Babbu",
+   "surname": "Bhatia",
+   "birthSurname": "Chopra",
+   "sex": "F",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "8vqU19Fpf22Xp/aqIt0cbpLw8u5VI6L5fcMrHtHl/TEouHYgTORkXzBIHpqfwGG0AMgoB8qi3Yl/fxu0VjItsoXO/P6B64s9iX3Ov36oJOWh+Iu1SjOzbGaqyjFSTbWiuRk="
+  },
+  "pt2ggy81y": {
+   "id": "pt2ggy81y",
+   "deceased": false,
+   "status": "unknown",
+   "parents": [
+    "pricoglcg",
+    "ph1hbrv3g"
+   ],
+   "partners": [
+    "p2si0xdxb"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "given": "Rahul",
+   "middleName": "",
+   "commonName": "Sonu",
+   "surname": "Chopra",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "notes": ""
+  },
+  "p2si0xdxb": {
+   "id": "p2si0xdxb",
+   "deceased": false,
+   "status": "unknown",
+   "parents": [],
+   "partners": [
+    "pt2ggy81y"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "given": "Ritika",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Chopra",
+   "birthSurname": "",
+   "sex": "F",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "PEopdTHV+0dhnMz7UmmgogA8LUbGPqX0/dRhFSIGSkvIU7Ya4OPcyRP//yVryQFRQZqPbh9N+/TICkWEwt0MS29YenKRIsz38RF4+dZSxfMstL9BfBDyBkjHfJYA2kePjB0="
+  },
+  "p96lj7t3s": {
+   "id": "p96lj7t3s",
+   "deceased": false,
+   "status": "unknown",
+   "parents": [
+    "p2si0xdxb",
+    "pt2ggy81y"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Divya",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Chopra",
+   "birthSurname": "",
+   "sex": "F",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "BCdlTsu4zqBGl8dnRSdBfk2+OkZLC4iaHxo65eMzDbzt/+w4Ie+P06LuR/B8XJ4hEvDZgq8K1odXIQmsywNbGCgH+kx+OPjvbr1CPboXeEJKdg2ZPjqeCCtz++a2X9P3hhA="
+  },
+  "px8v5ssbb": {
+   "id": "px8v5ssbb",
+   "deceased": false,
+   "status": "unknown",
+   "parents": [
+    "p2si0xdxb",
+    "pt2ggy81y"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Dhiwij",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Chopra",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "5Hl6JOIRMLohZViQEQU5tjrZvjFrNEZgJCr+XHsZrhcAoVtvbWfdmVhvNdYS1dfWJu3rUd3bKOTva2i2sMBYHknTjGKEbc47/g5hYJu5c8RUHi53f/yO+Rm99l3MtlxcC/8="
+  },
+  "p7dcvelko": {
+   "id": "p7dcvelko",
+   "deceased": false,
+   "status": "unknown",
+   "parents": [
+    "peio0y8qu"
+   ],
+   "partners": [],
+   "ex": [],
+   "placeholder": false,
+   "given": "Maanya",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Bhatia",
+   "birthSurname": "",
+   "sex": "F",
+   "born": "",
+   "died": "",
+   "notes": "",
+   "priv": "WIrTUlIvfO4DIUhmPRVy9GVhyIPBSvwjzOadzscu6OC27U98FroitCbtDOKY/aXmXwN6Ks1R0XnTbevFR3GC959b/+Di4iIX3RDrXi5JfoLKSPsTsDbOWWiKV5T0I+Zbybs="
+  },
+  "pztoggava": {
+   "id": "pztoggava",
+   "deceased": false,
+   "status": "unknown",
+   "parents": [],
+   "partners": [
+    "ps51a3c3f"
+   ],
+   "ex": [
+    "ps51a3c3f"
+   ],
+   "placeholder": false,
+   "given": "Gurdev",
+   "middleName": "",
+   "commonName": "",
+   "surname": "Multani",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "",
+   "died": "",
+   "notes": ""
   }
  },
  "vault": {
