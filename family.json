@@ -1,7 +1,7 @@
 {
  "format": "family-tree/1",
  "title": "Our Family Tree",
- "updated": "2026-11-18T03:27:45.569Z",
+ "updated": "2026-11-20T16:20:46.263Z",
  "home": "plifohlwv",
  "custodians": [],
  "imported": [
@@ -353,7 +353,8 @@
    "status": "living",
    "notes": "",
    "parents": [
-    "pn158g82t"
+    "pn158g82t",
+    "pfoljdny1"
    ],
    "partners": [
     "pkf2buonk"
@@ -1018,7 +1019,9 @@
    "deceased": false,
    "status": "living",
    "parents": [],
-   "partners": [],
+   "partners": [
+    "pfoljdny1"
+   ],
    "ex": [],
    "placeholder": false,
    "given": "Farhat",
@@ -1037,7 +1040,8 @@
    "deceased": false,
    "status": "living",
    "parents": [
-    "pn158g82t"
+    "pn158g82t",
+    "pfoljdny1"
    ],
    "partners": [
     "p47hk6pbp"
@@ -1651,6 +1655,27 @@
    "born": "",
    "died": "",
    "notes": ""
+  },
+  "pfoljdny1": {
+   "id": "pfoljdny1",
+   "deceased": false,
+   "status": "living",
+   "parents": [],
+   "partners": [
+    "pn158g82t"
+   ],
+   "ex": [],
+   "placeholder": false,
+   "given": "Nazrul",
+   "middleName": "Islam",
+   "commonName": "",
+   "surname": "Khan",
+   "birthSurname": "",
+   "sex": "M",
+   "born": "1952-12-12",
+   "died": "",
+   "notes": "",
+   "priv": "sEx6TyO1kxVOkuHl3jVXOxvfDbm+jdQsx9pgPuuHJZXAp9x8t+j1+iFAxNevi50nLVgGLP85HVBC9hyB1Lcnahx5ZLQ0mSaP7xBNbB5fLUnCDvFQ6aLTIjRS3VFxu0PrNYPZEErt+kqUg5w09NJWb1LqSJbqxQ=="
   }
  },
  "vault": {
